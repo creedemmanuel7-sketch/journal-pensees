@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRef, useState } from 'react';
-import ViewShot from 'react-native-view-shot';
+import { Platform } from 'react-native';
+const ViewShot = Platform.OS === 'web' ? View : require('react-native-view-shot').default;
 import * as Sharing from 'expo-sharing';
 import { useTheme } from '../context/ThemeContext';
 import { useFonts, CormorantGaramond_300Italic } from '@expo-google-fonts/cormorant-garamond';

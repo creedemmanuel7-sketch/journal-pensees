@@ -1,6 +1,7 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system/legacy';
+import { Platform } from 'react-native';
+const FileSystem = Platform.OS === 'web' ? null : require('expo-file-system/legacy');
 
 export const exportToPDF = async (notes, accent = '#f0a090') => {
   const sortedNotes = [...notes].sort((a, b) => new Date(b.date) - new Date(a.date));
