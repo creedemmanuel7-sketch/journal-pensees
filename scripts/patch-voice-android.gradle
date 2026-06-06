@@ -1,0 +1,30 @@
+apply plugin: 'com.android.library'
+
+def safeExtGet(prop, fallback) {
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
+android {
+    namespace "com.wenkesj.voice"
+    compileSdk safeExtGet('compileSdkVersion', 36)
+
+    defaultConfig {
+        minSdkVersion safeExtGet('minSdkVersion', 24)
+        targetSdkVersion safeExtGet('targetSdkVersion', 36)
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    google()
+    maven { url "$rootDir/../node_modules/react-native/android" }
+}
+
+dependencies {
+    implementation 'com.facebook.react:react-android'
+}

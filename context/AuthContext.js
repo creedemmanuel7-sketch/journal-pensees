@@ -1,17 +1,21 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
-import * as LocalAuthentication from 'expo-local-authentication';
+import ReactNativeBiometrics from 'react-native-biometrics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppState, Platform } from 'react-native';
+import { AppState } from 'react-native';
+import { hashPin, verifyPinHash, isLegacyPin } from '../utils/encryption';
 
 const AuthContext = createContext();
+const rnBiometrics = new ReactNativeBiometrics();
 
 const AUTO_LOCK_OPTIONS = [1, 2, 5, 10];
 
 export function AuthProvider({ children }) {
-  const [pin, setPin] = useState(null);
-  const [decoyPin, setDecoyPin] = useState(null);
+  const [pinConfigured, setPinConfigured] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
+  const [decoyConfigured, setDecoyConfigured] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(true);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [autoDestructEnabled, setAutoDestructEnabled] = useState(false);
   const [isDecoyMode, setIsDecoyMode] = useState(false);
@@ -22,9 +26,10 @@ export function AuthProvider({ children }) {
   const [recoveryKeywords, setRecoveryKeywordsState] = useState(null);
 
   const backgroundTimeRef = useRef(null);
-  const navigationRef = useRef(null);
 
-  useEffect(() => { loadAuth(); }, []);
+  useEffect(() => {
+    loadAuth();
+  }, []);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', handleAppStateChange);
@@ -50,47 +55,48 @@ export function AuthProvider({ children }) {
 
   const loadAuth = async () => {
     try {
-      const savedPin          = await AsyncStorage.getItem('user_pin');
-      const savedDecoy        = await AsyncStorage.getItem('decoy_pin');
+      const savedPin = await AsyncStorage.getItem('user_pin');
+      const savedDecoy = await AsyncStorage.getItem('decoy_pin');
       const savedAutoDestruct = await AsyncStorage.getItem('auto_destruct');
-      const savedFails        = await AsyncStorage.getItem('failed_attempts');
-      const savedIncognito    = await AsyncStorage.getItem('incognito_mode');
-      const savedIntrusion    = await AsyncStorage.getItem('intrusion_alert');
-      const savedPhotos       = await AsyncStorage.getItem('intrusion_photos');
-      const savedAutoLock     = await AsyncStorage.getItem('auto_lock_minutes');
-      const savedRecovery     = await AsyncStorage.getItem('recovery_keywords');
+      const savedFails = await AsyncStorage.getItem('failed_attempts');
+      const savedIncognito = await AsyncStorage.getItem('incognito_mode');
+      const savedIntrusion = await AsyncStorage.getItem('intrusion_alert');
+      const savedPhotos = await AsyncStorage.getItem('intrusion_photos');
+      const savedAutoLock = await AsyncStorage.getItem('auto_lock_minutes');
+      const savedRecovery = await AsyncStorage.getItem('recovery_keywords');
+      const savedBiometricEnabled =
+        await AsyncStorage.getItem('biometric_enabled');
 
-      if (savedPin)          setPin(savedPin);
-      if (savedDecoy)        setDecoyPin(savedDecoy);
-      if (savedAutoDestruct) setAutoDestructEnabled(savedAutoDestruct === 'true');
-      if (savedFails)        setFailedAttempts(parseInt(savedFails));
-      if (savedIncognito)    setIncognitoMode(savedIncognito === 'true');
-      if (savedIntrusion)    setIntrusionAlert(savedIntrusion === 'true');
-      if (savedPhotos)       setIntrusionPhotos(JSON.parse(savedPhotos));
-      if (savedAutoLock)     setAutoLockMinutes(parseInt(savedAutoLock));
-      if (savedRecovery)     setRecoveryKeywordsState(JSON.parse(savedRecovery));
+      setPinConfigured(!!savedPin);
+      setDecoyConfigured(!!savedDecoy);
+      if (savedBiometricEnabled !== null)
+        setBiometricEnabled(savedBiometricEnabled === 'true');
+      if (savedAutoDestruct)
+        setAutoDestructEnabled(savedAutoDestruct === 'true');
+      if (savedFails) setFailedAttempts(parseInt(savedFails, 10));
+      if (savedIncognito) setIncognitoMode(savedIncognito === 'true');
+      if (savedIntrusion) setIntrusionAlert(savedIntrusion === 'true');
+      if (savedPhotos) setIntrusionPhotos(JSON.parse(savedPhotos));
+      if (savedAutoLock) setAutoLockMinutes(parseInt(savedAutoLock, 10));
+      if (savedRecovery) setRecoveryKeywordsState(JSON.parse(savedRecovery));
 
-      if (Platform.OS === 'web') {
-        setBiometricAvailable(false);
-        return;
-      }
-      const compatible = await LocalAuthentication.hasHardwareAsync();
-      const enrolled   = await LocalAuthentication.isEnrolledAsync();
-      setBiometricAvailable(compatible && enrolled);
+      const { available, biometryType } =
+        await rnBiometrics.isSensorAvailable();
+      setBiometricAvailable(available && biometryType !== undefined);
     } catch (e) {
       console.error(e);
+    } finally {
+      setAuthReady(true);
     }
   };
 
   const authenticateWithBiometric = async () => {
     try {
-      const result = await LocalAuthentication.authenticateAsync({
+      const { success } = await rnBiometrics.simplePrompt({
         promptMessage: 'Déverrouiller Mes Pensées',
-        fallbackLabel: 'Utiliser le code PIN',
-        cancelLabel: 'Annuler',
-        disableDeviceFallback: false,
+        cancelButtonText: 'Annuler',
       });
-      if (result.success) {
+      if (success) {
         setIsAuthenticated(true);
         setFailedAttempts(0);
         await AsyncStorage.setItem('failed_attempts', '0');
@@ -102,16 +108,29 @@ export function AuthProvider({ children }) {
     }
   };
 
+  /** Vérifie un PIN saisi contre le PIN principal stocké (haché). */
+  const verifyPin = async (inputPin) => {
+    const storedPin = await AsyncStorage.getItem('user_pin');
+    return verifyPinHash(inputPin, storedPin);
+  };
+
   const authenticateWithPin = async (inputPin) => {
-    const currentPin = pin || '1234';
-    if (inputPin === currentPin) {
+    const storedPin = await AsyncStorage.getItem('user_pin');
+    if (!storedPin) {
+      return { success: false, needsSetup: true };
+    }
+    if (verifyPinHash(inputPin, storedPin)) {
+      // Migration silencieuse depuis l'ancien format en clair
+      if (isLegacyPin(storedPin)) await savePin(inputPin);
       setIsAuthenticated(true);
       setIsDecoyMode(false);
       setFailedAttempts(0);
       await AsyncStorage.setItem('failed_attempts', '0');
       return { success: true, decoy: false };
     }
-    if (decoyPin && inputPin === decoyPin) {
+    const storedDecoy = await AsyncStorage.getItem('decoy_pin');
+    if (storedDecoy && verifyPinHash(inputPin, storedDecoy)) {
+      if (isLegacyPin(storedDecoy)) await saveDecoyPin(inputPin);
       setIsAuthenticated(true);
       setIsDecoyMode(true);
       return { success: true, decoy: true };
@@ -119,11 +138,14 @@ export function AuthProvider({ children }) {
     const newFails = failedAttempts + 1;
     setFailedAttempts(newFails);
     await AsyncStorage.setItem('failed_attempts', newFails.toString());
-    if (intrusionAlert) await captureIntrusionLog();
     if (autoDestructEnabled && newFails >= 3) {
-      return { success: false, autoDestruct: true };
+      return { success: false, autoDestruct: true, attempts: newFails };
     }
-    return { success: false, attempts: newFails };
+    return {
+      success: false,
+      attempts: newFails,
+      intrusionLogged: intrusionAlert,
+    };
   };
 
   const saveIntrusionPhoto = async (photoUri) => {
@@ -138,22 +160,34 @@ export function AuthProvider({ children }) {
         note: 'Tentative de déverrouillage échouée',
         photo: photoUri,
       };
-      const updated = [log, ...intrusionPhotos].slice(0, 10);
-      setIntrusionPhotos(updated);
-      await AsyncStorage.setItem('intrusion_photos', JSON.stringify(updated));
+      setIntrusionPhotos((prev) => {
+        const updated = [log, ...prev].slice(0, 10);
+        AsyncStorage.setItem('intrusion_photos', JSON.stringify(updated));
+        return updated;
+      });
     } catch (e) {
       console.error(e);
     }
   };
 
   const savePin = async (newPin) => {
-    setPin(newPin);
-    await AsyncStorage.setItem('user_pin', newPin);
+    await AsyncStorage.setItem('user_pin', hashPin(newPin));
+    setPinConfigured(true);
   };
 
   const saveDecoyPin = async (newDecoyPin) => {
-    setDecoyPin(newDecoyPin);
-    await AsyncStorage.setItem('decoy_pin', newDecoyPin);
+    await AsyncStorage.setItem('decoy_pin', hashPin(newDecoyPin));
+    setDecoyConfigured(true);
+  };
+
+  const removeDecoyPin = async () => {
+    await AsyncStorage.removeItem('decoy_pin');
+    setDecoyConfigured(false);
+  };
+
+  const toggleBiometric = async (enabled) => {
+    setBiometricEnabled(enabled);
+    await AsyncStorage.setItem('biometric_enabled', enabled.toString());
   };
 
   const toggleAutoDestruct = async (enabled) => {
@@ -178,7 +212,7 @@ export function AuthProvider({ children }) {
 
   const lock = () => {
     setIsAuthenticated(false);
-    setIsDecoyMode(false);
+    // Conserver isDecoyMode : le mode leurre reste actif après verrouillage
   };
 
   const setRecoveryKeywords = async (words) => {
@@ -192,23 +226,48 @@ export function AuthProvider({ children }) {
   };
 
   const deleteIntrusionPhoto = async (id) => {
-    const updated = intrusionPhotos.filter(p => p.id !== id);
+    const updated = intrusionPhotos.filter((p) => p.id !== id);
     setIntrusionPhotos(updated);
     await AsyncStorage.setItem('intrusion_photos', JSON.stringify(updated));
   };
 
   return (
-    <AuthContext.Provider value={{
-      pin, decoyPin, isAuthenticated, biometricAvailable,
-      failedAttempts, autoDestructEnabled, isDecoyMode,
-      incognitoMode, intrusionAlert, intrusionPhotos,
-      autoLockMinutes, AUTO_LOCK_OPTIONS, recoveryKeywords,
-      authenticateWithBiometric, authenticateWithPin,
-      savePin, saveDecoyPin, toggleAutoDestruct,
-      toggleIncognito, toggleIntrusionAlert,
-      setAutoLock, lock, saveIntrusionPhoto,
-      setRecoveryKeywords, clearIntrusionPhotos, deleteIntrusionPhoto,
-    }}>
+    <AuthContext.Provider
+      value={{
+        pinConfigured,
+        authReady,
+        decoyConfigured,
+        isAuthenticated,
+        setIsAuthenticated,
+        biometricAvailable,
+        biometricEnabled,
+        failedAttempts,
+        autoDestructEnabled,
+        isDecoyMode,
+        incognitoMode,
+        intrusionAlert,
+        intrusionPhotos,
+        autoLockMinutes,
+        AUTO_LOCK_OPTIONS,
+        recoveryKeywords,
+        authenticateWithBiometric,
+        authenticateWithPin,
+        verifyPin,
+        savePin,
+        saveDecoyPin,
+        removeDecoyPin,
+        toggleBiometric,
+        toggleAutoDestruct,
+        toggleIncognito,
+        toggleIntrusionAlert,
+        setAutoLock,
+        lock,
+        saveIntrusionPhoto,
+        setRecoveryKeywords,
+        clearIntrusionPhotos,
+        deleteIntrusionPhoto,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

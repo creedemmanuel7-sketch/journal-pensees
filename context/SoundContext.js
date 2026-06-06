@@ -1,79 +1,99 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { Audio } from 'expo-av';
-
+import {
+  AMBIANCE_RAW_FILES,
+  resolveAmbianceFilePath,
+  playAmbianceFile,
+  stopAmbiancePlayback,
+  setAmbianceVolume,
+} from '../utils/ambiancePlayer';
 
 const SoundContext = createContext();
 
-const AMBIANCES = {
-  PLUIE: require('../assets/sounds/pluie.mp3'),
-  FORÊT: require('../assets/sounds/foret.mp3'),
-  CAFÉ:  require('../assets/sounds/cafe.mp3'),
-  FEU:   require('../assets/sounds/feu.mp3'),
-  SILENCE: null,
-};
-
 export function SoundProvider({ children }) {
-  const soundRef = useRef(null);
+  const pathCacheRef = useRef({});
+  const activeKeyRef = useRef(null);
   const [currentAmbiance, setCurrentAmbiance] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
+  const volumeRef = useRef(0.5);
 
   useEffect(() => {
-    Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: false,
-      shouldDuckAndroid: true,
-    });
-    return () => { stopSound(); };
+    volumeRef.current = volume;
+  }, [volume]);
+
+  useEffect(() => {
+    const preload = async () => {
+      for (const key of Object.keys(AMBIANCE_RAW_FILES)) {
+        try {
+          pathCacheRef.current[key] = await resolveAmbianceFilePath(key);
+        } catch (e) {
+          console.warn(`[Sound] Préchargement ${key}:`, e);
+        }
+      }
+    };
+    preload();
+    return () => {
+      stopAmbiancePlayback();
+      pathCacheRef.current = {};
+    };
   }, []);
 
   const stopSound = async () => {
-    try {
-      if (soundRef.current) {
-        await soundRef.current.stopAsync();
-        await soundRef.current.unloadAsync();
-        soundRef.current = null;
-      }
-      setIsPlaying(false);
-    } catch (e) {
-      console.error(e);
-    }
+    activeKeyRef.current = null;
+    setIsPlaying(false);
+    setCurrentAmbiance('SILENCE');
+    await stopAmbiancePlayback();
   };
 
   const playAmbiance = async (name) => {
-  try {
-    await stopSound();
-    if (!name || name === 'SILENCE' || !AMBIANCES[name]) {
+    await stopAmbiancePlayback();
+    activeKeyRef.current = null;
+    setIsPlaying(false);
+
+    if (!name || name === 'SILENCE' || !AMBIANCE_RAW_FILES[name]) {
       setCurrentAmbiance('SILENCE');
-      setIsPlaying(false);
       return;
     }
 
     setCurrentAmbiance(name);
-    const { sound } = await Audio.Sound.createAsync(
-      AMBIANCES[name],
-      { shouldPlay: true, isLooping: true, volume }
-    );
-    soundRef.current = sound;
-    setIsPlaying(true);
-  } catch (e) {
-    console.error('Erreur audio:', e);
-    setIsPlaying(false);
-  }
-};
+
+    try {
+      let filePath = pathCacheRef.current[name];
+      if (!filePath) {
+        filePath = await resolveAmbianceFilePath(name);
+        pathCacheRef.current[name] = filePath;
+      }
+
+      const vol = volumeRef.current;
+      await playAmbianceFile(filePath, vol);
+      activeKeyRef.current = name;
+      setIsPlaying(true);
+    } catch (e) {
+      console.error(`[Sound] Lecture ${name}:`, e);
+      setIsPlaying(false);
+      activeKeyRef.current = null;
+    }
+  };
+
   const changeVolume = async (newVolume) => {
     setVolume(newVolume);
-    if (soundRef.current) {
-      await soundRef.current.setVolumeAsync(newVolume);
+    volumeRef.current = newVolume;
+    if (activeKeyRef.current) {
+      await setAmbianceVolume(newVolume);
     }
   };
 
   return (
-    <SoundContext.Provider value={{
-      currentAmbiance, isPlaying, volume,
-      playAmbiance, stopSound, changeVolume,
-    }}>
+    <SoundContext.Provider
+      value={{
+        currentAmbiance,
+        isPlaying,
+        volume,
+        playAmbiance,
+        stopSound,
+        changeVolume,
+      }}
+    >
       {children}
     </SoundContext.Provider>
   );

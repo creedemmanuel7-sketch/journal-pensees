@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Mes Pensées</string>
+
+    <!-- Widget Inspiration du jour -->
+    <string name="widget_description">Une invitation à écrire renouvelée chaque jour</string>
+    <string name="widget_inspiration_label">INSPIRATION DU JOUR</string>
+    <string name="widget_inspiration_default">Qu\'aimerais-tu déposer ici aujourd\'hui ?</string>
+    <string name="widget_write_cta">Écrire</string>
+
+    <!-- Widget Série d'écriture -->
+    <string name="widget_streak_name">Mes Pensées : Série</string>
+    <string name="widget_streak_description">Votre série de jours d\'écriture consécutifs</string>
+    <string name="widget_streak_label">SÉRIE D\'ÉCRITURE</string>
+    <string name="widget_streak_empty">Commencez votre série aujourd\'hui</string>
+    <string name="widget_streak_caption_one">1 jour d\'affilée — continuez !</string>
+    <string name="widget_streak_caption_many">%1$d jours d\'affilée — continuez !</string>
+
+    <!-- Widget Raccourcis -->
+    <string name="widget_quick_actions_name">Mes Pensées : Raccourcis</string>
+    <string name="widget_quick_actions_description">Accès rapide sécurisé pour Écrire, Enregistrer un Vocal, Rechercher ou Ouvrir le Coffre Fort.</string>
+    <string name="widget_quick_actions_write">Écrire</string>
+    <string name="widget_quick_actions_record">Vocal</string>
+    <string name="widget_quick_actions_search">Chercher</string>
+    <string name="widget_quick_actions_coffre">Coffre</string>
+</resources>

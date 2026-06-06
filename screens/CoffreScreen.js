@@ -1,27 +1,58 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch, Modal, TouchableWithoutFeedback, TextInput, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFonts, CormorantGaramond_300Italic } from '@expo-google-fonts/cormorant-garamond';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+  Modal,
+  TouchableWithoutFeedback,
+  TextInput,
+  Alert,
+} from 'react-native';
+import { useAppFonts, FONT_DISPLAY_ITALIC } from '../utils/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotes } from '../context/NotesContext';
+import { useScreenTutorial, useTutorialRef } from '../context/TutorialContext';
 import { exportToPDF, exportToTXT } from '../utils/exportPDF';
-
+import { wipeAllData } from '../utils/wipe';
 
 export default function CoffreScreen({ navigation }) {
   const { theme, accent } = useTheme();
-  const [fontsLoaded] = useFonts({ CormorantGaramond_300Italic });
-  const { notes, saveNotes, emptyTrash } = useNotes();
+  const { fontsLoaded } = useAppFonts();
   const {
-    savePin, saveDecoyPin, toggleAutoDestruct, autoDestructEnabled,
-    incognitoMode, intrusionAlert, intrusionPhotos, clearIntrusionPhotos,
-    toggleIncognito, toggleIntrusionAlert, biometricAvailable,
+    saveNotes,
+    emptyTrash,
+    reEncryptNotes,
+    getActiveNotes,
+    decoyNotes,
+    setDecoyNotes,
+  } = useNotes();
+  const {
+    savePin,
+    saveDecoyPin,
+    toggleAutoDestruct,
+    autoDestructEnabled,
+    incognitoMode,
+    intrusionAlert,
+    intrusionPhotos,
+    clearIntrusionPhotos,
+    toggleIncognito,
+    toggleIntrusionAlert,
+    biometricAvailable,
+    biometricEnabled,
+    toggleBiometric,
+    verifyPin,
+    decoyConfigured,
+    removeDecoyPin,
+    isDecoyMode,
   } = useAuth();
 
   const { autoLockMinutes, AUTO_LOCK_OPTIONS, setAutoLock } = useAuth();
-  const [biometrie, setBiometrie] = useState(biometricAvailable);
-  const [leurre, setLeurre] = useState(false);
+  const [leurre, setLeurre] = useState(decoyConfigured);
   const [showAutoDestruct, setShowAutoDestruct] = useState(false);
   const [showChangePIN, setShowChangePIN] = useState(false);
   const [showLeurreConfig, setShowLeurreConfig] = useState(false);
@@ -33,10 +64,98 @@ export default function CoffreScreen({ navigation }) {
   const [pinChanged, setPinChanged] = useState(false);
   const [decoyPinInput, setDecoyPinInput] = useState('');
   const [decoyPinConfirm, setDecoyPinConfirm] = useState('');
-  const [decoyPinSaved, setDecoyPinSaved] = useState(false);
+  const [decoyPinSaved, setDecoyPinSaved] = useState(decoyConfigured);
   const [exporting, setExporting] = useState(false);
   const [oldPinInput, setOldPinInput] = useState('');
   const [showIntrusionGallery, setShowIntrusionGallery] = useState(false);
+  const [decoyDraft, setDecoyDraft] = useState([]);
+
+  // Tutoriel contextuel du Coffre
+  const accessTargetRef = useTutorialRef('coffre-access');
+  const intrusionTargetRef = useTutorialRef('coffre-intrusion');
+  const decoyTargetRef = useTutorialRef('coffre-decoy');
+  const pinTargetRef = useTutorialRef('coffre-pin');
+  const dangerTargetRef = useTutorialRef('coffre-danger');
+  const exportTargetRef = useTutorialRef('coffre-export');
+  const TUTORIAL_STEPS = [
+    {
+      targetId: 'coffre-access',
+      title: 'Accès & biométrie',
+      description:
+        'Activez la biométrie, le mode incognito et l’alerte d’intrusion qui journalise les tentatives échouées.',
+    },
+    ...(intrusionPhotos.length > 0
+      ? [
+          {
+            targetId: 'coffre-intrusion',
+            title: 'Journal d’intrusion',
+            description:
+              'Consultez les tentatives de déverrouillage échouées et videz l’historique.',
+          },
+        ]
+      : []),
+    {
+      targetId: 'coffre-decoy',
+      title: 'Mode leurre',
+      description:
+        'Définissez un faux code PIN qui ouvre un journal fictif, et personnalisez son contenu.',
+    },
+    {
+      targetId: 'coffre-pin',
+      title: 'Changer le PIN',
+      description:
+        'Modifiez votre code de secours — vos notes sont re-chiffrées avec la nouvelle clé.',
+    },
+    {
+      targetId: 'coffre-danger',
+      title: 'Zone critique',
+      description:
+        'Auto-destruction après 3 codes erronés, ou réinitialisation totale. Irréversible.',
+    },
+    {
+      targetId: 'coffre-export',
+      title: 'Exporter vos données',
+      description:
+        'Exportez vos pensées en texte brut ou générez un Livre de Vie en PDF.',
+    },
+  ];
+  useScreenTutorial('coffre', TUTORIAL_STEPS, { enabled: !isDecoyMode });
+
+  const openLeurreConfig = () => {
+    setDecoyDraft(
+      decoyNotes.map((n) => ({
+        id: n.id,
+        titre: n.titre || '',
+        contenu: n.contenu || '',
+        mood: n.mood || '😌',
+        date: n.date,
+        pinned: !!n.pinned,
+        capsule: n.capsule || null,
+      })),
+    );
+    setShowLeurreConfig(true);
+  };
+
+  const updateDecoyDraft = (id, field, value) => {
+    setDecoyDraft((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, [field]: value } : n)),
+    );
+  };
+
+  const saveDecoyContent = async () => {
+    const cleaned = decoyDraft.map((n) => {
+      const contenu = n.contenu || '';
+      return {
+        ...n,
+        titre: n.titre.trim() || 'Sans titre',
+        contenu,
+        wordCount:
+          contenu.trim() === '' ? 0 : contenu.trim().split(/\s+/).length,
+      };
+    });
+    await setDecoyNotes(cleaned);
+    setShowLeurreConfig(false);
+  };
 
   const confirmAutoDestruct = async () => {
     if (autoDestructConfirm === 'SUPPRIMER') {
@@ -47,13 +166,21 @@ export default function CoffreScreen({ navigation }) {
     }
   };
 
-  const { pin } = useAuth();
   const saveNewPin = async () => {
-    if (oldPinInput !== pin) {
-      Alert.alert('Erreur', 'L\'ancien code PIN est incorrect.');
+    const valid = await verifyPin(oldPinInput);
+    if (!valid) {
+      Alert.alert('Erreur', "L'ancien code PIN est incorrect.");
       return;
     }
     if (newPin.length === 4 && newPin === confirmPin) {
+      const ok = await reEncryptNotes(newPin);
+      if (!ok) {
+        Alert.alert(
+          'Erreur',
+          'Impossible de re-chiffrer les notes. Vérifiez votre accès.',
+        );
+        return;
+      }
       await savePin(newPin);
       setPinChanged(true);
       setShowChangePIN(false);
@@ -74,67 +201,115 @@ export default function CoffreScreen({ navigation }) {
   };
 
   const SectionLabel = ({ children }) => (
-    <Text style={[styles.sectionLabel, { color: theme.text3 }]}>{children}</Text>
+    <Text style={[styles.sectionLabel, { color: theme.text3 }]}>
+      {children}
+    </Text>
   );
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg2 }]}>
-
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={() => navigation.navigate('Drawer')}>
           <Text style={[styles.menuIcon, { color: theme.text2 }]}>☰</Text>
         </TouchableOpacity>
-        <Text style={fontsLoaded
-          ? { fontFamily: 'CormorantGaramond_300Italic', fontSize: 22, color: accent.primary }
-          : { fontSize: 22, color: accent.primary, fontStyle: 'italic' }}>
+        <Text
+          style={
+            fontsLoaded
+              ? {
+                  fontFamily: FONT_DISPLAY_ITALIC,
+                  fontSize: 22,
+                  color: accent.primary,
+                }
+              : { fontSize: 22, color: accent.primary, fontStyle: 'italic' }
+          }
+        >
           Mes Pensées
         </Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Personnalisation')}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Personnalisation')}
+        >
           <Text style={styles.settingsIcon}>⚙️</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-
         {/* Titre */}
         <View style={styles.coffreHeader}>
-          <View style={[styles.coffreIconWrap, { backgroundColor: accent.light, borderColor: accent.teal + '50' }]}>
+          <View
+            style={[
+              styles.coffreIconWrap,
+              {
+                backgroundColor: accent.light,
+                borderColor: accent.teal + '50',
+              },
+            ]}
+          >
             <Text style={{ fontSize: 26 }}>🔐</Text>
           </View>
-          <Text style={fontsLoaded
-            ? { fontFamily: 'CormorantGaramond_300Italic', fontSize: 32, color: accent.primary, fontWeight: '300' }
-            : { fontSize: 32, color: accent.primary, fontStyle: 'italic' }}>
+          <Text
+            style={
+              fontsLoaded
+                ? {
+                    fontFamily: FONT_DISPLAY_ITALIC,
+                    fontSize: 32,
+                    color: accent.primary,
+                    fontWeight: '300',
+                  }
+                : { fontSize: 32, color: accent.primary, fontStyle: 'italic' }
+            }
+          >
             Le Coffre
           </Text>
-          <Text style={[styles.coffreSub, { color: theme.text3 }]}>CRYPTAGE MILITAIRE ACTIF</Text>
+          <Text style={[styles.coffreSub, { color: theme.text3 }]}>
+            CRYPTAGE MILITAIRE ACTIF
+          </Text>
         </View>
 
         {/* Accès & Biométrie */}
         <SectionLabel>ACCÈS & BIOMÉTRIE</SectionLabel>
-        <View style={[styles.group, { backgroundColor: theme.bg3, borderColor: theme.border }]}>
-          <View style={[styles.settingRow, { borderBottomColor: theme.border }]}>
+        <View
+          ref={accessTargetRef}
+          collapsable={false}
+          style={[
+            styles.group,
+            { backgroundColor: theme.bg3, borderColor: theme.border },
+          ]}
+        >
+          <View
+            style={[styles.settingRow, { borderBottomColor: theme.border }]}
+          >
             <Text style={styles.settingIcon}>🫆</Text>
             <View style={styles.settingText}>
-              <Text style={[styles.settingName, { color: theme.text }]}>Biométrie active</Text>
+              <Text style={[styles.settingName, { color: theme.text }]}>
+                Biométrie active
+              </Text>
               <Text style={[styles.settingDesc, { color: theme.text3 }]}>
-                {biometricAvailable ? 'Disponible sur cet appareil' : 'Non disponible sur cet appareil'}
+                {biometricAvailable
+                  ? 'Disponible sur cet appareil'
+                  : 'Non disponible sur cet appareil'}
               </Text>
             </View>
             <Switch
-              value={biometrie}
-              onValueChange={setBiometrie}
+              value={biometricAvailable && biometricEnabled}
+              onValueChange={toggleBiometric}
               trackColor={{ false: theme.bg5, true: accent.primary }}
               thumbColor="#fff"
               disabled={!biometricAvailable}
             />
           </View>
-          <View style={[styles.settingRow, { borderBottomColor: theme.border }]}>
+          <View
+            style={[styles.settingRow, { borderBottomColor: theme.border }]}
+          >
             <Text style={styles.settingIcon}>🙈</Text>
             <View style={styles.settingText}>
-              <Text style={[styles.settingName, { color: theme.text }]}>Mode Incognito</Text>
+              <Text style={[styles.settingName, { color: theme.text }]}>
+                Mode Incognito
+              </Text>
               <Text style={[styles.settingDesc, { color: theme.text3 }]}>
-                {incognitoMode ? 'Actif — verrouillage en arrière-plan' : "Masque l'aperçu multitâche"}
+                {incognitoMode
+                  ? 'Actif — verrouillage en arrière-plan'
+                  : "Masque l'aperçu multitâche"}
               </Text>
             </View>
             <Switch
@@ -147,7 +322,9 @@ export default function CoffreScreen({ navigation }) {
           <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
             <Text style={styles.settingIcon}>📷</Text>
             <View style={styles.settingText}>
-              <Text style={[styles.settingName, { color: theme.text }]}>Alerte d'Intrusion</Text>
+              <Text style={[styles.settingName, { color: theme.text }]}>
+                Alerte d'Intrusion
+              </Text>
               <Text style={[styles.settingDesc, { color: theme.text3 }]}>
                 {intrusionPhotos.length > 0
                   ? `${intrusionPhotos.length} tentative(s) enregistrée(s)`
@@ -167,33 +344,78 @@ export default function CoffreScreen({ navigation }) {
         {intrusionPhotos.length > 0 && (
           <>
             <SectionLabel>JOURNAL D'INTRUSION</SectionLabel>
-            <View style={[styles.group, { backgroundColor: theme.bg3, borderColor: theme.border }]}>
+            <View
+              ref={intrusionTargetRef}
+              collapsable={false}
+              style={[
+                styles.group,
+                { backgroundColor: theme.bg3, borderColor: theme.border },
+              ]}
+            >
               {intrusionPhotos.slice(0, 3).map((log, i) => (
-                <View key={log.id} style={[styles.settingRow,
-                  { borderBottomColor: theme.border },
-                  i === Math.min(intrusionPhotos.length, 3) - 1 && !log.photo && { borderBottomWidth: 0 }
-                ]}>
+                <View
+                  key={log.id}
+                  style={[
+                    styles.settingRow,
+                    { borderBottomColor: theme.border },
+                    i === Math.min(intrusionPhotos.length, 3) - 1 &&
+                      !log.photo && { borderBottomWidth: 0 },
+                  ]}
+                >
                   <Text style={styles.settingIcon}>⚠️</Text>
                   <View style={styles.settingText}>
-                    <Text style={[styles.settingName, { color: theme.text }]}>Tentative échouée</Text>
+                    <Text style={[styles.settingName, { color: theme.text }]}>
+                      Tentative échouée
+                    </Text>
                     <Text style={[styles.settingDesc, { color: theme.text3 }]}>
-                      {new Date(log.timestamp).toLocaleDateString('fr-FR', {
-                        day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
-                      })}
+                      {(() => {
+                        try {
+                          if (!log.timestamp) return '--';
+                          const d = new Date(log.timestamp);
+                          if (isNaN(d.getTime())) return '--';
+                          return d.toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          });
+                        } catch (_) {
+                          return '--';
+                        }
+                      })()}
                     </Text>
                   </View>
                   {log.photo && <Text style={{ fontSize: 18 }}>📸</Text>}
                 </View>
               ))}
-              <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: theme.border }}>
-                <TouchableOpacity style={[styles.configLeurreBtn, { flex: 1 }]} onPress={() => setShowIntrusionGallery(true)}>
-                  <Text style={[styles.configLeurreText, { color: accent.primary }]}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  borderTopWidth: 1,
+                  borderTopColor: theme.border,
+                }}
+              >
+                <TouchableOpacity
+                  style={[styles.configLeurreBtn, { flex: 1 }]}
+                  onPress={() => setShowIntrusionGallery(true)}
+                >
+                  <Text
+                    style={[styles.configLeurreText, { color: accent.primary }]}
+                  >
                     Voir tout
                   </Text>
                 </TouchableOpacity>
                 <View style={{ width: 1, backgroundColor: theme.border }} />
-                <TouchableOpacity style={[styles.configLeurreBtn, { flex: 1 }]} onPress={clearIntrusionPhotos}>
-                  <Text style={[styles.configLeurreText, { color: '#e55', opacity: 0.8 }]}>
+                <TouchableOpacity
+                  style={[styles.configLeurreBtn, { flex: 1 }]}
+                  onPress={clearIntrusionPhotos}
+                >
+                  <Text
+                    style={[
+                      styles.configLeurreText,
+                      { color: '#e55', opacity: 0.8 },
+                    ]}
+                  >
                     Vider l'historique
                   </Text>
                 </TouchableOpacity>
@@ -204,27 +426,47 @@ export default function CoffreScreen({ navigation }) {
 
         {/* Decoy Mode */}
         <SectionLabel>LE FAUX CODE PIN (DECOY MODE)</SectionLabel>
-        <View style={[styles.group, { backgroundColor: theme.bg3, borderColor: theme.border }]}>
-          <View style={[styles.settingRow, { borderBottomColor: theme.border }]}>
+        <View
+          ref={decoyTargetRef}
+          collapsable={false}
+          style={[
+            styles.group,
+            { backgroundColor: theme.bg3, borderColor: theme.border },
+          ]}
+        >
+          <View
+            style={[styles.settingRow, { borderBottomColor: theme.border }]}
+          >
             <Text style={styles.settingIcon}>🎭</Text>
             <View style={styles.settingText}>
-              <Text style={[styles.settingName, { color: theme.text }]}>Mode Leurre Actif</Text>
+              <Text style={[styles.settingName, { color: theme.text }]}>
+                Mode Leurre Actif
+              </Text>
               <Text style={[styles.settingDesc, { color: theme.text3 }]}>
-                {decoyPinSaved ? '✓ Code leurre configuré' : 'Code PIN secondaire → journal fictif'}
+                {decoyPinSaved
+                  ? '✓ Code leurre configuré'
+                  : 'Code PIN secondaire → journal fictif'}
               </Text>
             </View>
             <Switch
               value={leurre}
-              onValueChange={(val) => {
+              onValueChange={async (val) => {
                 setLeurre(val);
-                if (val) setShowDecoyPinModal(true);
-                else saveDecoyPin('');
+                if (val) {
+                  setShowDecoyPinModal(true);
+                } else {
+                  await removeDecoyPin();
+                  setDecoyPinSaved(false);
+                }
               }}
               trackColor={{ false: theme.bg5, true: accent.primary }}
               thumbColor="#fff"
             />
           </View>
-          <TouchableOpacity style={styles.configLeurreBtn} onPress={() => setShowLeurreConfig(true)}>
+          <TouchableOpacity
+            style={styles.configLeurreBtn}
+            onPress={openLeurreConfig}
+          >
             <Text style={[styles.configLeurreText, { color: accent.primary }]}>
               Configurer le contenu du leurre
             </Text>
@@ -233,22 +475,43 @@ export default function CoffreScreen({ navigation }) {
 
         {/* Codes sécurité */}
         <SectionLabel>CODES DE SÉCURITÉ</SectionLabel>
-        <View style={[styles.group, { backgroundColor: theme.bg3, borderColor: theme.border }]}>
-          <TouchableOpacity style={[styles.settingRow, { borderBottomColor: theme.border }]}
-            onPress={() => setShowChangePIN(true)}>
+        <View
+          ref={pinTargetRef}
+          collapsable={false}
+          style={[
+            styles.group,
+            { backgroundColor: theme.bg3, borderColor: theme.border },
+          ]}
+        >
+          <TouchableOpacity
+            style={[styles.settingRow, { borderBottomColor: theme.border }]}
+            onPress={() => setShowChangePIN(true)}
+          >
             <Text style={styles.settingIcon}>⌨️</Text>
             <View style={styles.settingText}>
-              <Text style={[styles.settingName, { color: theme.text }]}>Changer le PIN de secours</Text>
-              {pinChanged && <Text style={[styles.settingSuccess, { color: accent.teal }]}>✓ PIN mis à jour</Text>}
+              <Text style={[styles.settingName, { color: theme.text }]}>
+                Changer le PIN de secours
+              </Text>
+              {pinChanged && (
+                <Text style={[styles.settingSuccess, { color: accent.teal }]}>
+                  ✓ PIN mis à jour
+                </Text>
+              )}
             </View>
             <Text style={[styles.chevron, { color: theme.text3 }]}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.settingRow, { borderBottomWidth: 0 }]}
-            onPress={() => navigation.navigate('Recovery')}>
+          <TouchableOpacity
+            style={[styles.settingRow, { borderBottomWidth: 0 }]}
+            onPress={() => navigation.navigate('Recovery')}
+          >
             <Text style={styles.settingIcon}>🔑</Text>
             <View style={styles.settingText}>
-              <Text style={[styles.settingName, { color: theme.text }]}>Mots-clés de récupération</Text>
-              <Text style={[styles.settingDesc, { color: theme.text3 }]}>Pour réinitialiser le PIN en cas d'oubli</Text>
+              <Text style={[styles.settingName, { color: theme.text }]}>
+                Mots-clés de récupération
+              </Text>
+              <Text style={[styles.settingDesc, { color: theme.text3 }]}>
+                Pour réinitialiser le PIN en cas d'oubli
+              </Text>
             </View>
             <Text style={[styles.chevron, { color: theme.text3 }]}>›</Text>
           </TouchableOpacity>
@@ -256,13 +519,19 @@ export default function CoffreScreen({ navigation }) {
 
         {/* Verrouillage Automatique */}
         <SectionLabel>VERROUILLAGE AUTOMATIQUE</SectionLabel>
-        <View style={[styles.group, { backgroundColor: theme.bg3, borderColor: theme.border }]}>
+        <View
+          style={[
+            styles.group,
+            { backgroundColor: theme.bg3, borderColor: theme.border },
+          ]}
+        >
           {AUTO_LOCK_OPTIONS.map((min, i) => (
             <TouchableOpacity
               key={min}
-              style={[styles.settingRow,
+              style={[
+                styles.settingRow,
                 { borderBottomColor: theme.border },
-                i === AUTO_LOCK_OPTIONS.length - 1 && { borderBottomWidth: 0 }
+                i === AUTO_LOCK_OPTIONS.length - 1 && { borderBottomWidth: 0 },
               ]}
               onPress={() => setAutoLock(min)}
             >
@@ -280,14 +549,20 @@ export default function CoffreScreen({ navigation }) {
         </View>
 
         {/* Zone critique */}
-        <View style={styles.dangerZone}>
+        <View
+          ref={dangerTargetRef}
+          collapsable={false}
+          style={styles.dangerZone}
+        >
           <View style={styles.dangerTitle}>
             <Text style={{ fontSize: 14 }}>⚠️</Text>
             <Text style={styles.dangerTitleText}>ZONE CRITIQUE</Text>
           </View>
           {autoDestructDone ? (
             <View style={styles.destructDoneWrap}>
-              <Text style={[styles.destructDoneText, { color: accent.teal }]}>✓ Auto-destruction activée</Text>
+              <Text style={[styles.destructDoneText, { color: accent.teal }]}>
+                ✓ Auto-destruction activée
+              </Text>
               <Text style={[styles.destructDoneDesc, { color: theme.text2 }]}>
                 Toutes les données seront effacées après 3 tentatives erronées.
               </Text>
@@ -295,36 +570,55 @@ export default function CoffreScreen({ navigation }) {
           ) : (
             <>
               <Text style={[styles.dangerDesc, { color: theme.text2 }]}>
-                L'option <Text style={[styles.dangerBold, { color: theme.text }]}>Auto-destruction</Text> effacera
-                définitivement toutes vos pensées après 3 tentatives de PIN erronées. Cette action est irréversible.
+                L'option{' '}
+                <Text style={[styles.dangerBold, { color: theme.text }]}>
+                  Auto-destruction
+                </Text>{' '}
+                effacera définitivement toutes vos pensées après 3 tentatives de
+                PIN erronées. Cette action est irréversible.
               </Text>
               <TouchableOpacity
-                style={[styles.autoDestructBtn, { backgroundColor: accent.light, marginBottom: 12 }]}
-                onPress={() => setShowAutoDestruct(true)}>
-                <Text style={[styles.autoDestructText, { color: accent.primary }]}>Option Auto-destruction</Text>
+                style={[
+                  styles.autoDestructBtn,
+                  { backgroundColor: accent.light, marginBottom: 12 },
+                ]}
+                onPress={() => setShowAutoDestruct(true)}
+              >
+                <Text
+                  style={[styles.autoDestructText, { color: accent.primary }]}
+                >
+                  Option Auto-destruction
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.autoDestructBtn, { backgroundColor: 'rgba(229,85,85,0.1)' }]}
+                style={[
+                  styles.autoDestructBtn,
+                  { backgroundColor: 'rgba(229,85,85,0.1)' },
+                ]}
                 onPress={() => {
                   Alert.alert(
-                    "Réinitialisation Totale",
+                    'Réinitialisation Totale',
                     "Cela supprimera TOUTES vos données (Notes, Photos d'intrusions, PIN). Cette action est irréversible. Voulez-vous continuer ?",
                     [
-                      { text: "Annuler", style: "cancel" },
-                      { 
-                        text: "TOUT EFFACER", 
-                        style: "destructive",
+                      { text: 'Annuler', style: 'cancel' },
+                      {
+                        text: 'TOUT EFFACER',
+                        style: 'destructive',
                         onPress: async () => {
-                          await AsyncStorage.clear();
-                          alert("Application remise à zéro. Veuillez redémarrer l'application.");
-                        }
-                      }
-                    ]
+                          await wipeAllData();
+                          alert(
+                            "Application remise à zéro. Veuillez redémarrer l'application.",
+                          );
+                        },
+                      },
+                    ],
                   );
                 }}
               >
-                <Text style={[styles.autoDestructText, { color: '#e55' }]}>RÉINITIALISER L'APPLICATION</Text>
+                <Text style={[styles.autoDestructText, { color: '#e55' }]}>
+                  RÉINITIALISER L'APPLICATION
+                </Text>
               </TouchableOpacity>
             </>
           )}
@@ -332,19 +626,28 @@ export default function CoffreScreen({ navigation }) {
 
         {/* Gestion données */}
         <SectionLabel>GESTION DES DONNÉES</SectionLabel>
-        <View style={[styles.group, { backgroundColor: theme.bg3, borderColor: theme.border }]}>
+        <View
+          ref={exportTargetRef}
+          collapsable={false}
+          style={[
+            styles.group,
+            { backgroundColor: theme.bg3, borderColor: theme.border },
+          ]}
+        >
           <TouchableOpacity
             style={[styles.settingRow, { borderBottomColor: theme.border }]}
             onPress={async () => {
               setExporting(true);
-              await exportToTXT(notes);
+              await exportToTXT(getActiveNotes());
               setExporting(false);
             }}
           >
             <Text style={styles.settingIcon}>📄</Text>
             <View style={styles.settingText}>
               <Text style={[styles.settingName, { color: theme.text }]}>
-                {exporting ? 'Export en cours...' : 'Tout Exporter (Texte brut)'}
+                {exporting
+                  ? 'Export en cours...'
+                  : 'Tout Exporter (Texte brut)'}
               </Text>
             </View>
           </TouchableOpacity>
@@ -352,14 +655,16 @@ export default function CoffreScreen({ navigation }) {
             style={[styles.settingRow, { borderBottomWidth: 0 }]}
             onPress={async () => {
               setExporting(true);
-              await exportToPDF(notes, accent.primary);
+              await exportToPDF(getActiveNotes(), accent.primary);
               setExporting(false);
             }}
           >
             <Text style={styles.settingIcon}>📖</Text>
             <View style={styles.settingText}>
               <Text style={[styles.settingName, { color: theme.text }]}>
-                {exporting ? 'Génération en cours...' : 'Générer un Livre de Vie (PDF)'}
+                {exporting
+                  ? 'Génération en cours...'
+                  : 'Générer un Livre de Vie (PDF)'}
               </Text>
             </View>
             <Text style={[styles.chevron, { color: theme.text3 }]}>+</Text>
@@ -369,28 +674,50 @@ export default function CoffreScreen({ navigation }) {
         <View style={{ height: 100 }} />
       </ScrollView>
       {/* Footer permanent */}
-        <View style={styles.coffreFooter}>
-          <Text style={[styles.footerLabel, { color: theme.text3 }]}>PROTÉGÉ PAR LE PROTOCOLE</Text>
-          <View style={styles.footerNames}>
-            <Text style={[styles.footerName, { color: theme.text3 }]}>Aurore</Text>
-            <View style={[styles.footerLine, { backgroundColor: theme.text3 }]} />
-            <Text style={[styles.footerName, { color: theme.text3 }]}>Midnight</Text>
-          </View>
+      <View style={styles.coffreFooter}>
+        <Text style={[styles.footerLabel, { color: theme.text3 }]}>
+          PROTÉGÉ PAR LE PROTOCOLE
+        </Text>
+        <View style={styles.footerNames}>
+          <Text style={[styles.footerName, { color: theme.text3 }]}>
+            Aurore
+          </Text>
+          <View style={[styles.footerLine, { backgroundColor: theme.text3 }]} />
+          <Text style={[styles.footerName, { color: theme.text3 }]}>
+            Midnight
+          </Text>
         </View>
+      </View>
 
       {/* Bottom Nav */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.bg2, borderTopColor: theme.border }]}>
-        <TouchableOpacity style={styles.navBtn} onPress={() => navigation.navigate('Timeline')}>
+      <View
+        style={[
+          styles.bottomNav,
+          { backgroundColor: theme.bg2, borderTopColor: theme.border },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.navBtn}
+          onPress={() => navigation.navigate('Timeline')}
+        >
           <Text style={[styles.navIcon, { opacity: 0.4 }]}>📖</Text>
           <Text style={[styles.navLabel, { color: theme.text3 }]}>JOURNAL</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navBtn} onPress={() => navigation.navigate('Stats')}>
+        <TouchableOpacity
+          style={styles.navBtn}
+          onPress={() => navigation.navigate('Stats')}
+        >
           <Text style={[styles.navIcon, { opacity: 0.4 }]}>📈</Text>
           <Text style={[styles.navLabel, { color: theme.text3 }]}>STATS</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navBtn} onPress={() => navigation.navigate('Coffre')}>
+        <TouchableOpacity
+          style={styles.navBtn}
+          onPress={() => navigation.navigate('Coffre')}
+        >
           <Text style={styles.navIconActive}>🔐</Text>
-          <Text style={[styles.navLabelActive, { color: accent.primary }]}>COFFRE</Text>
+          <Text style={[styles.navLabelActive, { color: accent.primary }]}>
+            COFFRE
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -399,14 +726,32 @@ export default function CoffreScreen({ navigation }) {
         <TouchableWithoutFeedback onPress={() => setShowAutoDestruct(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <View style={[styles.modal, { backgroundColor: theme.bg3, borderColor: theme.border }]}>
+              <View
+                style={[
+                  styles.modal,
+                  { backgroundColor: theme.bg3, borderColor: theme.border },
+                ]}
+              >
                 <Text style={styles.modalIcon}>⚠️</Text>
-                <Text style={[styles.modalTitle, { color: theme.text }]}>Confirmer l'Auto-destruction</Text>
+                <Text style={[styles.modalTitle, { color: theme.text }]}>
+                  Confirmer l'Auto-destruction
+                </Text>
                 <Text style={[styles.modalDesc, { color: theme.text2 }]}>
-                  Tapez <Text style={{ color: '#e55', fontWeight: '600' }}>SUPPRIMER</Text> pour confirmer.
+                  Tapez{' '}
+                  <Text style={{ color: '#e55', fontWeight: '600' }}>
+                    SUPPRIMER
+                  </Text>{' '}
+                  pour confirmer.
                 </Text>
                 <TextInput
-                  style={[styles.modalInput, { backgroundColor: theme.bg4, color: theme.text, borderColor: theme.border }]}
+                  style={[
+                    styles.modalInput,
+                    {
+                      backgroundColor: theme.bg4,
+                      color: theme.text,
+                      borderColor: theme.border,
+                    },
+                  ]}
                   placeholder="SUPPRIMER"
                   placeholderTextColor={theme.text4}
                   value={autoDestructConfirm}
@@ -414,12 +759,25 @@ export default function CoffreScreen({ navigation }) {
                   autoCapitalize="characters"
                 />
                 <TouchableOpacity
-                  style={[styles.modalConfirmBtn, autoDestructConfirm !== 'SUPPRIMER' && { opacity: 0.4 }]}
-                  onPress={confirmAutoDestruct}>
-                  <Text style={styles.modalConfirmText}>Activer l'Auto-destruction</Text>
+                  style={[
+                    styles.modalConfirmBtn,
+                    autoDestructConfirm !== 'SUPPRIMER' && { opacity: 0.4 },
+                  ]}
+                  onPress={confirmAutoDestruct}
+                >
+                  <Text style={styles.modalConfirmText}>
+                    Activer l'Auto-destruction
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowAutoDestruct(false)}>
-                  <Text style={[styles.modalCancelText, { color: theme.text2 }]}>Annuler</Text>
+                <TouchableOpacity
+                  style={styles.modalCancelBtn}
+                  onPress={() => setShowAutoDestruct(false)}
+                >
+                  <Text
+                    style={[styles.modalCancelText, { color: theme.text2 }]}
+                  >
+                    Annuler
+                  </Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>
@@ -432,44 +790,109 @@ export default function CoffreScreen({ navigation }) {
         <TouchableWithoutFeedback onPress={() => setShowChangePIN(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <View style={[styles.modal, { backgroundColor: theme.bg3, borderColor: theme.border, paddingBottom: 32 }]}>
-                <Text style={[styles.modalTitle, { color: theme.text }]}>Changer le PIN</Text>
-                <Text style={[styles.modalDesc, { color: theme.text2 }]}>Veuillez confirmer votre identité.</Text>
+              <View
+                style={[
+                  styles.modal,
+                  {
+                    backgroundColor: theme.bg3,
+                    borderColor: theme.border,
+                    paddingBottom: 32,
+                  },
+                ]}
+              >
+                <Text style={[styles.modalTitle, { color: theme.text }]}>
+                  Changer le PIN
+                </Text>
+                <Text style={[styles.modalDesc, { color: theme.text2 }]}>
+                  Veuillez confirmer votre identité.
+                </Text>
                 <TextInput
-                  style={[styles.modalInput, { backgroundColor: theme.bg4, color: theme.text, borderColor: theme.border, marginBottom: 16 }]}
+                  style={[
+                    styles.modalInput,
+                    {
+                      backgroundColor: theme.bg4,
+                      color: theme.text,
+                      borderColor: theme.border,
+                      marginBottom: 16,
+                    },
+                  ]}
                   placeholder="Ancien PIN"
                   placeholderTextColor={theme.text4}
                   value={oldPinInput}
-                  onChangeText={t => setOldPinInput(t.replace(/[^0-9]/g, '').slice(0, 4))}
-                  keyboardType="numeric" secureTextEntry maxLength={4}
+                  onChangeText={(t) =>
+                    setOldPinInput(t.replace(/[^0-9]/g, '').slice(0, 4))
+                  }
+                  keyboardType="numeric"
+                  secureTextEntry
+                  maxLength={4}
                 />
                 <TextInput
-                  style={[styles.modalInput, { backgroundColor: theme.bg4, color: theme.text, borderColor: theme.border }]}
+                  style={[
+                    styles.modalInput,
+                    {
+                      backgroundColor: theme.bg4,
+                      color: theme.text,
+                      borderColor: theme.border,
+                    },
+                  ]}
                   placeholder="Nouveau PIN"
                   placeholderTextColor={theme.text4}
                   value={newPin}
-                  onChangeText={t => setNewPin(t.replace(/[^0-9]/g, '').slice(0, 4))}
-                  keyboardType="numeric" secureTextEntry maxLength={4}
+                  onChangeText={(t) =>
+                    setNewPin(t.replace(/[^0-9]/g, '').slice(0, 4))
+                  }
+                  keyboardType="numeric"
+                  secureTextEntry
+                  maxLength={4}
                 />
                 <TextInput
-                  style={[styles.modalInput, { backgroundColor: theme.bg4, color: theme.text, borderColor: theme.border, marginTop: 10 }]}
+                  style={[
+                    styles.modalInput,
+                    {
+                      backgroundColor: theme.bg4,
+                      color: theme.text,
+                      borderColor: theme.border,
+                      marginTop: 10,
+                    },
+                  ]}
                   placeholder="Confirmer le PIN"
                   placeholderTextColor={theme.text4}
                   value={confirmPin}
-                  onChangeText={t => setConfirmPin(t.replace(/[^0-9]/g, '').slice(0, 4))}
-                  keyboardType="numeric" secureTextEntry maxLength={4}
+                  onChangeText={(t) =>
+                    setConfirmPin(t.replace(/[^0-9]/g, '').slice(0, 4))
+                  }
+                  keyboardType="numeric"
+                  secureTextEntry
+                  maxLength={4}
                 />
                 {confirmPin.length === 4 && newPin !== confirmPin && (
-                  <Text style={styles.pinError}>Les codes ne correspondent pas</Text>
+                  <Text style={styles.pinError}>
+                    Les codes ne correspondent pas
+                  </Text>
                 )}
                 <TouchableOpacity
-                  style={[styles.modalConfirmBtn, { backgroundColor: accent.primary, marginTop: 16 },
-                    (newPin.length < 4 || newPin !== confirmPin) && { opacity: 0.4 }]}
-                  onPress={saveNewPin}>
-                  <Text style={[styles.modalConfirmText, { color: theme.bg }]}>Enregistrer</Text>
+                  style={[
+                    styles.modalConfirmBtn,
+                    { backgroundColor: accent.primary, marginTop: 16 },
+                    (newPin.length < 4 || newPin !== confirmPin) && {
+                      opacity: 0.4,
+                    },
+                  ]}
+                  onPress={saveNewPin}
+                >
+                  <Text style={[styles.modalConfirmText, { color: theme.bg }]}>
+                    Enregistrer
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowChangePIN(false)}>
-                  <Text style={[styles.modalCancelText, { color: theme.text2 }]}>Annuler</Text>
+                <TouchableOpacity
+                  style={styles.modalCancelBtn}
+                  onPress={() => setShowChangePIN(false)}
+                >
+                  <Text
+                    style={[styles.modalCancelText, { color: theme.text2 }]}
+                  >
+                    Annuler
+                  </Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>
@@ -482,42 +905,94 @@ export default function CoffreScreen({ navigation }) {
         <TouchableWithoutFeedback onPress={() => setShowDecoyPinModal(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <View style={[styles.modal, { backgroundColor: theme.bg3, borderColor: theme.border, paddingBottom: 32 }]}>
+              <View
+                style={[
+                  styles.modal,
+                  {
+                    backgroundColor: theme.bg3,
+                    borderColor: theme.border,
+                    paddingBottom: 32,
+                  },
+                ]}
+              >
                 <Text style={styles.modalIcon}>🎭</Text>
-                <Text style={[styles.modalTitle, { color: theme.text }]}>Code PIN Leurre</Text>
+                <Text style={[styles.modalTitle, { color: theme.text }]}>
+                  Code PIN Leurre
+                </Text>
                 <Text style={[styles.modalDesc, { color: theme.text2 }]}>
-                  Ce code ouvrira un journal fictif à la place de vos vraies pensées.
+                  Ce code ouvrira un journal fictif à la place de vos vraies
+                  pensées.
                 </Text>
                 <TextInput
-                  style={[styles.modalInput, { backgroundColor: theme.bg4, color: theme.text, borderColor: theme.border }]}
+                  style={[
+                    styles.modalInput,
+                    {
+                      backgroundColor: theme.bg4,
+                      color: theme.text,
+                      borderColor: theme.border,
+                    },
+                  ]}
                   placeholder="Code leurre (4 chiffres)"
                   placeholderTextColor={theme.text4}
                   value={decoyPinInput}
-                  onChangeText={t => setDecoyPinInput(t.replace(/[^0-9]/g, '').slice(0, 4))}
-                  keyboardType="numeric" secureTextEntry maxLength={4}
+                  onChangeText={(t) =>
+                    setDecoyPinInput(t.replace(/[^0-9]/g, '').slice(0, 4))
+                  }
+                  keyboardType="numeric"
+                  secureTextEntry
+                  maxLength={4}
                 />
                 <TextInput
-                  style={[styles.modalInput, { backgroundColor: theme.bg4, color: theme.text, borderColor: theme.border, marginTop: 10 }]}
+                  style={[
+                    styles.modalInput,
+                    {
+                      backgroundColor: theme.bg4,
+                      color: theme.text,
+                      borderColor: theme.border,
+                      marginTop: 10,
+                    },
+                  ]}
                   placeholder="Confirmer le code leurre"
                   placeholderTextColor={theme.text4}
                   value={decoyPinConfirm}
-                  onChangeText={t => setDecoyPinConfirm(t.replace(/[^0-9]/g, '').slice(0, 4))}
-                  keyboardType="numeric" secureTextEntry maxLength={4}
+                  onChangeText={(t) =>
+                    setDecoyPinConfirm(t.replace(/[^0-9]/g, '').slice(0, 4))
+                  }
+                  keyboardType="numeric"
+                  secureTextEntry
+                  maxLength={4}
                 />
-                {decoyPinConfirm.length === 4 && decoyPinInput !== decoyPinConfirm && (
-                  <Text style={styles.pinError}>Les codes ne correspondent pas</Text>
-                )}
+                {decoyPinConfirm.length === 4 &&
+                  decoyPinInput !== decoyPinConfirm && (
+                    <Text style={styles.pinError}>
+                      Les codes ne correspondent pas
+                    </Text>
+                  )}
                 <TouchableOpacity
-                  style={[styles.modalConfirmBtn, { backgroundColor: accent.primary, marginTop: 16 },
-                    (decoyPinInput.length < 4 || decoyPinInput !== decoyPinConfirm) && { opacity: 0.4 }]}
-                  onPress={saveNewDecoyPin}>
-                  <Text style={[styles.modalConfirmText, { color: theme.bg }]}>Activer le Mode Leurre</Text>
+                  style={[
+                    styles.modalConfirmBtn,
+                    { backgroundColor: accent.primary, marginTop: 16 },
+                    (decoyPinInput.length < 4 ||
+                      decoyPinInput !== decoyPinConfirm) && { opacity: 0.4 },
+                  ]}
+                  onPress={saveNewDecoyPin}
+                >
+                  <Text style={[styles.modalConfirmText, { color: theme.bg }]}>
+                    Activer le Mode Leurre
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => {
-                  setShowDecoyPinModal(false);
-                  setLeurre(false);
-                }}>
-                  <Text style={[styles.modalCancelText, { color: theme.text2 }]}>Annuler</Text>
+                <TouchableOpacity
+                  style={styles.modalCancelBtn}
+                  onPress={() => {
+                    setShowDecoyPinModal(false);
+                    setLeurre(false);
+                  }}
+                >
+                  <Text
+                    style={[styles.modalCancelText, { color: theme.text2 }]}
+                  >
+                    Annuler
+                  </Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>
@@ -530,20 +1005,101 @@ export default function CoffreScreen({ navigation }) {
         <TouchableWithoutFeedback onPress={() => setShowLeurreConfig(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <View style={[styles.modal, { backgroundColor: theme.bg3, borderColor: theme.border }]}>
-                <Text style={[styles.modalTitle, { color: theme.text }]}>Contenu du Journal Leurre</Text>
-                <Text style={[styles.modalDesc, { color: theme.text2 }]}>
-                  Ces notes fictives s'afficheront quand le faux PIN est saisi.
+              <View
+                style={[
+                  styles.modal,
+                  {
+                    backgroundColor: theme.bg3,
+                    borderColor: theme.border,
+                    width: '90%',
+                    maxHeight: '85%',
+                  },
+                ]}
+              >
+                <Text style={[styles.modalTitle, { color: theme.text }]}>
+                  Contenu du Journal Leurre
                 </Text>
-                <View style={[styles.leurrePreview, { backgroundColor: theme.bg4 }]}>
-                  {['📝 Liste de courses du 12 octobre', '📝 Idées pour le jardin', '📝 Recette de tarte aux pommes'].map(n => (
-                    <Text key={n} style={[styles.leurreNote, { color: theme.text2 }]}>{n}</Text>
+                <Text style={[styles.modalDesc, { color: theme.text2 }]}>
+                  Personnalisez ces notes fictives. Elles s'afficheront quand le
+                  faux PIN est saisi.
+                </Text>
+                <ScrollView
+                  style={{ maxHeight: 360 }}
+                  contentContainerStyle={{ gap: 14, paddingBottom: 8 }}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                >
+                  {decoyDraft.map((n, i) => (
+                    <View
+                      key={n.id}
+                      style={[
+                        styles.leurreEditCard,
+                        {
+                          backgroundColor: theme.bg4,
+                          borderColor: theme.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[styles.leurreEditLabel, { color: theme.text3 }]}
+                      >
+                        NOTE {i + 1}
+                      </Text>
+                      <TextInput
+                        style={[
+                          styles.leurreEditInput,
+                          {
+                            backgroundColor: theme.bg3,
+                            color: theme.text,
+                            borderColor: theme.border,
+                          },
+                        ]}
+                        placeholder="Titre"
+                        placeholderTextColor={theme.text4}
+                        value={n.titre}
+                        onChangeText={(t) => updateDecoyDraft(n.id, 'titre', t)}
+                      />
+                      <TextInput
+                        style={[
+                          styles.leurreEditInput,
+                          styles.leurreEditMultiline,
+                          {
+                            backgroundColor: theme.bg3,
+                            color: theme.text,
+                            borderColor: theme.border,
+                          },
+                        ]}
+                        placeholder="Contenu"
+                        placeholderTextColor={theme.text4}
+                        value={n.contenu}
+                        onChangeText={(t) =>
+                          updateDecoyDraft(n.id, 'contenu', t)
+                        }
+                        multiline
+                      />
+                    </View>
                   ))}
-                </View>
+                </ScrollView>
                 <TouchableOpacity
-                  style={[styles.modalConfirmBtn, { backgroundColor: accent.primary }]}
-                  onPress={() => setShowLeurreConfig(false)}>
-                  <Text style={[styles.modalConfirmText, { color: theme.bg }]}>Fermer</Text>
+                  style={[
+                    styles.modalConfirmBtn,
+                    { backgroundColor: accent.primary },
+                  ]}
+                  onPress={saveDecoyContent}
+                >
+                  <Text style={[styles.modalConfirmText, { color: theme.bg }]}>
+                    Enregistrer
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalCancelBtn}
+                  onPress={() => setShowLeurreConfig(false)}
+                >
+                  <Text
+                    style={[styles.modalCancelText, { color: theme.text2 }]}
+                  >
+                    Annuler
+                  </Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>
@@ -553,57 +1109,149 @@ export default function CoffreScreen({ navigation }) {
 
       {/* Modal Historique Intrusion */}
       <Modal visible={showIntrusionGallery} transparent animationType="slide">
-        <TouchableWithoutFeedback onPress={() => setShowIntrusionGallery(false)}>
+        <TouchableWithoutFeedback
+          onPress={() => setShowIntrusionGallery(false)}
+        >
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <View style={[styles.modal, { backgroundColor: theme.bg3, borderColor: theme.border, width: '90%', height: '80%' }]}>
-                <Text style={[styles.modalTitle, { color: theme.text }]}>Historique d'Intrusion</Text>
-                <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 20 }}>
-                  {intrusionPhotos.map(log => (
-                    <View key={log.id} style={[styles.logCard, { backgroundColor: theme.bg4, borderColor: theme.border }]}>
+              <View
+                style={[
+                  styles.modal,
+                  {
+                    backgroundColor: theme.bg3,
+                    borderColor: theme.border,
+                    width: '90%',
+                    height: '80%',
+                  },
+                ]}
+              >
+                <Text style={[styles.modalTitle, { color: theme.text }]}>
+                  Historique d'Intrusion
+                </Text>
+                <ScrollView
+                  contentContainerStyle={{ gap: 16, paddingBottom: 20 }}
+                >
+                  {intrusionPhotos.map((log) => (
+                    <View
+                      key={log.id}
+                      style={[
+                        styles.logCard,
+                        {
+                          backgroundColor: theme.bg4,
+                          borderColor: theme.border,
+                        },
+                      ]}
+                    >
                       <View style={styles.logHeader}>
-                        <Text style={{ color: theme.text, fontSize: 13, fontWeight: '600' }}>Tentative échouée</Text>
+                        <Text
+                          style={{
+                            color: theme.text,
+                            fontSize: 13,
+                            fontWeight: '600',
+                          }}
+                        >
+                          Tentative échouée
+                        </Text>
                         <Text style={{ color: theme.text3, fontSize: 11 }}>
-                          {new Date(log.timestamp).toLocaleString('fr-FR')}
+                          {(() => {
+                            try {
+                              if (!log.timestamp) return '--';
+                              const d = new Date(log.timestamp);
+                              if (isNaN(d.getTime())) return '--';
+                              return d.toLocaleString('fr-FR');
+                            } catch (_) {
+                              return '--';
+                            }
+                          })()}
                         </Text>
                       </View>
                       {log.photo && (
                         <View style={styles.logPhotoWrap}>
-                           <Text style={{ color: theme.text3, fontStyle: 'italic', fontSize: 12 }}>📸 Photo capturée</Text>
-                           {/* Ici on pourrait afficher l'image avec un composant Image, 
+                          <Text
+                            style={{
+                              color: theme.text3,
+                              fontStyle: 'italic',
+                              fontSize: 12,
+                            }}
+                          >
+                            📸 Photo capturée
+                          </Text>
+                          {/* Ici on pourrait afficher l'image avec un composant Image, 
                            mais comme c'est local on peut afficher le chemin pour l'instant */}
                         </View>
                       )}
                     </View>
                   ))}
-                  {intrusionPhotos.length === 0 && <Text style={{ textAlign: 'center', color: theme.text4 }}>Aucun log disponible.</Text>}
+                  {intrusionPhotos.length === 0 && (
+                    <Text style={{ textAlign: 'center', color: theme.text4 }}>
+                      Aucun log disponible.
+                    </Text>
+                  )}
                 </ScrollView>
                 <TouchableOpacity
-                  style={[styles.modalConfirmBtn, { backgroundColor: accent.primary }]}
-                  onPress={() => setShowIntrusionGallery(false)}>
-                  <Text style={[styles.modalConfirmText, { color: theme.bg }]}>Fermer</Text>
+                  style={[
+                    styles.modalConfirmBtn,
+                    { backgroundColor: accent.primary },
+                  ]}
+                  onPress={() => setShowIntrusionGallery(false)}
+                >
+                  <Text style={[styles.modalConfirmText, { color: theme.bg }]}>
+                    Fermer
+                  </Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
   menuIcon: { fontSize: 18, width: 28 },
   settingsIcon: { fontSize: 18, width: 28, textAlign: 'right' },
   coffreHeader: { alignItems: 'center', paddingVertical: 20 },
-  coffreIconWrap: { width: 56, height: 56, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  coffreIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
   coffreSub: { fontSize: 9, letterSpacing: 2, marginTop: 4 },
-  sectionLabel: { fontSize: 9, letterSpacing: 2, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 6 },
-  group: { marginHorizontal: 20, marginBottom: 14, borderRadius: 18, borderWidth: 1, overflow: 'hidden' },
-  settingRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, gap: 12 },
+  sectionLabel: {
+    fontSize: 9,
+    letterSpacing: 2,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 6,
+  },
+  group: {
+    marginHorizontal: 20,
+    marginBottom: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    gap: 12,
+  },
   settingIcon: { fontSize: 18, width: 24, textAlign: 'center' },
   settingText: { flex: 1 },
   settingName: { fontSize: 14 },
@@ -612,9 +1260,27 @@ const styles = StyleSheet.create({
   chevron: { fontSize: 18 },
   configLeurreBtn: { padding: 14, alignItems: 'center' },
   configLeurreText: { fontSize: 12, fontWeight: '500' },
-  dangerZone: { marginHorizontal: 20, marginBottom: 14, backgroundColor: 'rgba(200,50,50,0.07)', borderRadius: 18, padding: 18, borderWidth: 1, borderColor: 'rgba(200,50,50,0.2)' },
-  dangerTitle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  dangerTitleText: { fontSize: 12, letterSpacing: 1.5, color: '#e55', fontWeight: '500' },
+  dangerZone: {
+    marginHorizontal: 20,
+    marginBottom: 14,
+    backgroundColor: 'rgba(200,50,50,0.07)',
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(200,50,50,0.2)',
+  },
+  dangerTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  dangerTitleText: {
+    fontSize: 12,
+    letterSpacing: 1.5,
+    color: '#e55',
+    fontWeight: '500',
+  },
   dangerDesc: { fontSize: 12, lineHeight: 20, marginBottom: 16 },
   dangerBold: { fontWeight: '600' },
   autoDestructBtn: { borderRadius: 12, padding: 14, alignItems: 'center' },
@@ -627,23 +1293,66 @@ const styles = StyleSheet.create({
   footerNames: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   footerName: { fontStyle: 'italic', fontSize: 13 },
   footerLine: { width: 30, height: 1, opacity: 0.4 },
-  bottomNav: { flexDirection: 'row', borderTopWidth: 1, paddingBottom: 20, paddingTop: 10 },
+  bottomNav: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    paddingBottom: 20,
+    paddingTop: 10,
+  },
   navBtn: { flex: 1, alignItems: 'center', gap: 4 },
   navIconActive: { fontSize: 20 },
   navIcon: { fontSize: 20 },
   navLabel: { fontSize: 8, letterSpacing: 1.5 },
   navLabelActive: { fontSize: 8, letterSpacing: 1.5 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', justifyContent: 'center', alignItems: 'center' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modal: { width: 320, borderRadius: 20, padding: 24, borderWidth: 1 },
   modalIcon: { fontSize: 32, textAlign: 'center', marginBottom: 12 },
-  modalTitle: { fontSize: 18, textAlign: 'center', marginBottom: 8, fontWeight: '500' },
-  modalDesc: { fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 16 },
-  modalInput: { borderRadius: 12, padding: 14, fontSize: 14, borderWidth: 1, textAlign: 'center', letterSpacing: 2 },
-  modalConfirmBtn: { marginTop: 16, padding: 14, backgroundColor: 'rgba(229,85,85,0.2)', borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(229,85,85,0.3)' },
+  modalTitle: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  modalDesc: {
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  modalInput: {
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 14,
+    borderWidth: 1,
+    textAlign: 'center',
+    letterSpacing: 2,
+  },
+  modalConfirmBtn: {
+    marginTop: 16,
+    padding: 14,
+    backgroundColor: 'rgba(229,85,85,0.2)',
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(229,85,85,0.3)',
+  },
   modalConfirmText: { fontSize: 14, color: '#e55', fontWeight: '500' },
   modalCancelBtn: { marginTop: 10, padding: 14, alignItems: 'center' },
   modalCancelText: { fontSize: 14 },
   pinError: { fontSize: 11, color: '#e55', textAlign: 'center', marginTop: 6 },
-  leurrePreview: { borderRadius: 12, padding: 14, marginBottom: 16, gap: 8 },
-  leurreNote: { fontSize: 13 },
+  leurreEditCard: { borderRadius: 12, padding: 12, borderWidth: 1, gap: 8 },
+  leurreEditLabel: { fontSize: 9, letterSpacing: 1.5 },
+  leurreEditInput: {
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
+    borderWidth: 1,
+  },
+  leurreEditMultiline: { minHeight: 60, textAlignVertical: 'top' },
 });

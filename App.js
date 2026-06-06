@@ -1,16 +1,14 @@
-import { Platform } from 'react-native';
-if (Platform.OS !== 'web') {
-  require('react-native-get-random-values');
-}
+import 'react-native-get-random-values';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+import { StatusBar } from 'react-native';
 
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { NotesProvider } from './context/NotesContext';
 import { AuthProvider } from './context/AuthContext';
 import { SoundProvider } from './context/SoundContext';
+import { TutorialProvider } from './context/TutorialContext';
 
 import OnboardingScreen from './screens/OnboardingScreen';
 import LockScreen from './screens/LockScreen';
@@ -23,13 +21,13 @@ import PersonnalisationScreen from './screens/PersonnalisationScreen';
 import DrawerScreen from './screens/DrawerScreen';
 import SearchScreen from './screens/SearchScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
+import { Linking } from 'react-native';
 import { useAuth } from './context/AuthContext';
 import ShareNoteScreen from './screens/ShareNoteScreen';
 import CapsulesScreen from './screens/CapsulesScreen';
 import TrashScreen from './screens/TrashScreen';
 import RecoveryScreen from './screens/RecoveryScreen';
-
 
 const Stack = createNativeStackNavigator();
 
@@ -37,12 +35,82 @@ function AppNavigator() {
   const { isFirstLaunch, resolvedMode, theme } = useTheme();
   const { isAuthenticated } = useAuth();
   const navigationRef = useRef(null);
+  const pendingUrlRef = useRef(null);
+
+  const handleDeepLink = useCallback(
+    (url) => {
+      if (!url) return;
+      if (!isAuthenticated) {
+        pendingUrlRef.current = url;
+        return;
+      }
+      if (!navigationRef.current) {
+        pendingUrlRef.current = url;
+        return;
+      }
+      try {
+        if (url.includes('editor')) {
+          const hasRecord =
+            url.includes('record=true') || url.includes('record=1');
+          navigationRef.current.navigate('Editor', { record: hasRecord });
+        } else if (url.includes('timeline')) {
+          navigationRef.current.navigate('Timeline');
+        } else if (url.includes('search')) {
+          navigationRef.current.navigate('Search');
+        } else if (url.includes('coffre')) {
+          navigationRef.current.navigate('Coffre');
+        }
+      } catch (e) {}
+    },
+    [isAuthenticated],
+  );
 
   useEffect(() => {
-    if (!isAuthenticated && navigationRef.current) {
+    Linking.getInitialURL().then(handleDeepLink);
+    const sub = Linking.addEventListener('url', ({ url }) =>
+      handleDeepLink(url),
+    );
+    return () => sub.remove();
+  }, [handleDeepLink]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (pendingUrlRef.current && navigationRef.current) {
+        const url = pendingUrlRef.current;
+        pendingUrlRef.current = null;
+        setTimeout(() => {
+          try {
+            if (url.includes('editor')) {
+              const hasRecord =
+                url.includes('record=true') || url.includes('record=1');
+              navigationRef.current.navigate('Editor', { record: hasRecord });
+            } else if (url.includes('timeline')) {
+              navigationRef.current.navigate('Timeline');
+            } else if (url.includes('search')) {
+              navigationRef.current.navigate('Search');
+            } else if (url.includes('coffre')) {
+              navigationRef.current.navigate('Coffre');
+            }
+          } catch (e) {}
+        }, 300);
+      }
+    } else if (navigationRef.current) {
       try {
         const currentRoute = navigationRef.current.getCurrentRoute()?.name;
-        const protectedScreens = ['Timeline', 'Editor', 'Stats', 'Coffre', 'Personnalisation', 'Search', 'Notifications', 'Drawer'];
+        const protectedScreens = [
+          'Timeline',
+          'Editor',
+          'Stats',
+          'Coffre',
+          'Personnalisation',
+          'Search',
+          'Notifications',
+          'Drawer',
+          'ShareNote',
+          'Capsules',
+          'Trash',
+          'Recovery',
+        ];
         if (protectedScreens.includes(currentRoute)) {
           navigationRef.current.reset({
             index: 0,
@@ -51,15 +119,16 @@ function AppNavigator() {
         }
       } catch (e) {}
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, navigationRef.current]);
 
-  // Sur le Web, on évite de bloquer l'affichage si le chargement prend du temps
-  if (isFirstLaunch === null && Platform.OS !== 'web') return null;
+  if (isFirstLaunch === null) return null;
 
   return (
     <>
-      <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />
-      <NavigationContainer>
+      <StatusBar
+        barStyle={resolvedMode === 'dark' ? 'light-content' : 'dark-content'}
+      />
+      <NavigationContainer ref={navigationRef}>
         <Stack.Navigator
           initialRouteName={isFirstLaunch ? 'Onboarding' : 'Lock'}
           screenOptions={{
@@ -71,36 +140,89 @@ function AppNavigator() {
             animationDuration: 380,
           }}
         >
-          <Stack.Screen name="Onboarding" component={OnboardingScreen}
-            options={{ animation: 'fade', animationDuration: 600 }} />
-          <Stack.Screen name="Lock" component={LockScreen}
-            options={{ animation: 'fade', animationDuration: 500 }} />
-          <Stack.Screen name="Pin" component={PinScreen}
-            options={{ animation: 'slide_from_bottom', animationDuration: 400, gestureDirection: 'vertical' }} />
-          <Stack.Screen name="Timeline" component={TimelineScreen}
-            options={{ animation: 'fade_from_bottom', animationDuration: 380 }} />
-          <Stack.Screen name="Editor" component={EditorScreen}
-            options={{ animation: 'slide_from_bottom', animationDuration: 400, gestureDirection: 'vertical' }} />
-          <Stack.Screen name="Stats" component={StatsScreen}
-            options={{ animation: 'fade_from_bottom', animationDuration: 380 }} />
-          <Stack.Screen name="Coffre" component={CoffreScreen}
-            options={{ animation: 'fade_from_bottom', animationDuration: 380 }} />
-          <Stack.Screen name="Personnalisation" component={PersonnalisationScreen}
-            options={{ animation: 'slide_from_right', animationDuration: 380 }} />
-          <Stack.Screen name="Search" component={SearchScreen}
-            options={{ animation: 'slide_from_right', animationDuration: 380 }} />
-          <Stack.Screen name="Notifications" component={NotificationsScreen}
-            options={{ animation: 'slide_from_right', animationDuration: 380 }} />
-          <Stack.Screen name="Drawer" component={DrawerScreen}
-            options={{ animation: 'none', presentation: 'transparentModal' }} />
-            <Stack.Screen name="ShareNote" component={ShareNoteScreen}
-  options={{ animation: 'slide_from_bottom', animationDuration: 400 }} />
-  <Stack.Screen name="Capsules" component={CapsulesScreen}
-  options={{ animation: 'slide_from_right', animationDuration: 380 }} />
-  <Stack.Screen name="Trash" component={TrashScreen}
-  options={{ animation: 'slide_from_right', animationDuration: 380 }} />
-  <Stack.Screen name="Recovery" component={RecoveryScreen}
-  options={{ animation: 'slide_from_bottom', animationDuration: 400 }} />
+          <Stack.Screen
+            name="Onboarding"
+            component={OnboardingScreen}
+            options={{ animation: 'fade', animationDuration: 600 }}
+          />
+          <Stack.Screen
+            name="Lock"
+            component={LockScreen}
+            options={{ animation: 'fade', animationDuration: 500 }}
+          />
+          <Stack.Screen
+            name="Pin"
+            component={PinScreen}
+            options={{
+              animation: 'slide_from_bottom',
+              animationDuration: 400,
+              gestureDirection: 'vertical',
+            }}
+          />
+          <Stack.Screen
+            name="Timeline"
+            component={TimelineScreen}
+            options={{ animation: 'fade_from_bottom', animationDuration: 380 }}
+          />
+          <Stack.Screen
+            name="Editor"
+            component={EditorScreen}
+            options={{
+              animation: 'slide_from_bottom',
+              animationDuration: 400,
+              gestureDirection: 'vertical',
+            }}
+          />
+          <Stack.Screen
+            name="Stats"
+            component={StatsScreen}
+            options={{ animation: 'fade_from_bottom', animationDuration: 380 }}
+          />
+          <Stack.Screen
+            name="Coffre"
+            component={CoffreScreen}
+            options={{ animation: 'fade_from_bottom', animationDuration: 380 }}
+          />
+          <Stack.Screen
+            name="Personnalisation"
+            component={PersonnalisationScreen}
+            options={{ animation: 'slide_from_right', animationDuration: 380 }}
+          />
+          <Stack.Screen
+            name="Search"
+            component={SearchScreen}
+            options={{ animation: 'slide_from_right', animationDuration: 380 }}
+          />
+          <Stack.Screen
+            name="Notifications"
+            component={NotificationsScreen}
+            options={{ animation: 'slide_from_right', animationDuration: 380 }}
+          />
+          <Stack.Screen
+            name="Drawer"
+            component={DrawerScreen}
+            options={{ animation: 'none', presentation: 'transparentModal' }}
+          />
+          <Stack.Screen
+            name="ShareNote"
+            component={ShareNoteScreen}
+            options={{ animation: 'slide_from_bottom', animationDuration: 400 }}
+          />
+          <Stack.Screen
+            name="Capsules"
+            component={CapsulesScreen}
+            options={{ animation: 'slide_from_right', animationDuration: 380 }}
+          />
+          <Stack.Screen
+            name="Trash"
+            component={TrashScreen}
+            options={{ animation: 'slide_from_right', animationDuration: 380 }}
+          />
+          <Stack.Screen
+            name="Recovery"
+            component={RecoveryScreen}
+            options={{ animation: 'slide_from_bottom', animationDuration: 400 }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </>
@@ -109,12 +231,14 @@ function AppNavigator() {
 
 export default function App() {
   return (
-    <SafeAreaProvider style={Platform.OS === 'web' ? { flex: 1, minHeight: '100vh' } : { flex: 1 }}>
+    <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
           <NotesProvider>
             <SoundProvider>
-              <AppNavigator />
+              <TutorialProvider>
+                <AppNavigator />
+              </TutorialProvider>
             </SoundProvider>
           </NotesProvider>
         </AuthProvider>

@@ -1,0 +1,13 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/CormorantGaramond-LightItalic.ttf",
+      "sha1": "bcc7afbf08460085f5dd5aeabfdcb30c5232200b"
+    },
+    {
+      "path": "assets/fonts/README.md",
+      "sha1": "ed70e02f66114f4af71798ddef11a56caccba9f0"
+    }
+  ]
+}
