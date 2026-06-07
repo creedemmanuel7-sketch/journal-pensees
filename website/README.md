@@ -56,7 +56,7 @@ Si un vrai APK est généré côté application mobile, le copier avec :
 Copy-Item "C:\Users\credo\Desktop\MesPensees\android\app\build\outputs\apk\debug\app-debug.apk" "C:\Users\credo\Desktop\MesPensees\website\public\downloads\mespensees-debug.apk" -Force
 ```
 
-Le fichier actuellement présent est un placeholder, car aucun `.apk` n'a été trouvé dans `C:\Users\credo\Desktop\MesPensees`.
+Le fichier actuellement présent est un APK debug réel destiné au téléchargement direct temporaire. Il ne remplace pas une release Play Store signée.
 
 ## Structure
 
@@ -72,7 +72,7 @@ src/
   i18n/
     fr.json / en.json     # traductions UI
 public/
-  downloads/              # APK public ou placeholder
+  downloads/              # APK public et notes de remplacement
   screenshots/            # captures réelles de l'application
   og-image.svg            # image Open Graph
 ```
@@ -85,7 +85,7 @@ public/
 | `src/data/mespensees.ts` | Pitch, features, stack MesPensees |
 | `src/i18n/fr.json` / `en.json` | Textes d'interface |
 | `public/screenshots/*.png` | Captures réelles affichées dans la séquence verticale |
-| `public/downloads/mespensees-debug.apk` | Remplacer par le vrai APK |
+| `public/downloads/mespensees-debug.apk` | APK debug public temporaire |
 | `public/og-image.svg` | Image de partage social |
 
 ## i18n
