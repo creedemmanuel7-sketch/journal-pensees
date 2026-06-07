@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "home": "Home",
+    "mespensees": "The app",
+    "screenshots": "Screenshots",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "hero": {
+    "greeting": "Android app",
+    "role": "Encrypted, local, discreet private journal",
+    "bio": "MesPensees helps you write ideas, emotions, memories, and time capsules without an account or server. Your thoughts stay on your device.",
+    "by": "by",
+    "cta": "Discover MesPensees",
+    "download": "Download APK",
+    "support": "Support the project",
+    "scroll": "Scroll down"
+  },
+  "mespensees": {
+    "title": "MesPensees",
+    "subtitle": "Your private journal, encrypted and 100% local",
+    "pitch": "MesPensees is a mobile journaling app built for absolute privacy: no cloud, no backend, no account. Everything stays on your device.",
+    "highlightsTitle": "Why MesPensees?",
+    "featuresTitle": "Key features",
+    "stackTitle": "Tech stack",
+    "screenshotsTitle": "App walkthrough",
+    "githubCta": "View on GitHub",
+    "downloadCta": "Download APK",
+    "privacyCta": "Read privacy policy",
+    "privacy": "Privacy-first · Zero cloud"
+  },
+  "about": {
+    "title": "About Crédo",
+    "subtitle": "The creator behind MesPensees",
+    "body": "I am Crédo, a first-year IRT / AI and Big Data student at ESGIS-TOGO, based in Lomé. I care about software development, data/AI, UI/UX, and useful applications. My personal challenge, “One Project per Day”, pushes me to learn by building.",
+    "extra": "Outside code, I enjoy basketball and photography, two interests that sharpen my sense of rhythm, observation, and detail.",
+    "portfolio": "View my external portfolio",
+    "linkedin": "LinkedIn",
+    "github": "GitHub"
+  },
+  "support": {
+    "title": "Support MesPensees",
+    "subtitle": "Your encouragement helps keep development moving.",
+    "body": "Payment is not automated on this website. To support the project, send any amount via Moov Money to the number below and optionally add “MesPensees support” as a note.",
+    "numberLabel": "Moov Money number",
+    "copy": "Copy number",
+    "copied": "Number copied",
+    "qr": "Moov Money QR to add",
+    "close": "Close"
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Questions, suggestions, or feedback about MesPensees?",
+    "email": "Email",
+    "phone": "Phone",
+    "location": "Location",
+    "social": "Social links"
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "madeWith": "Crafted with care",
+    "privacy": "Privacy",
+    "legal": "Legal notice"
+  }
+}

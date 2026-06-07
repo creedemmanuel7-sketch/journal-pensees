@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "mespensees": "L'app",
+    "screenshots": "Captures",
+    "about": "À propos",
+    "contact": "Contact"
+  },
+  "hero": {
+    "greeting": "Application Android",
+    "role": "Journal intime chiffré, local et discret",
+    "bio": "MesPensees aide à écrire ses idées, émotions, souvenirs et capsules temporelles sans compte ni serveur. Vos pensées restent sur votre appareil.",
+    "by": "par",
+    "cta": "Découvrir MesPensees",
+    "download": "Télécharger l'APK",
+    "support": "Soutenir le projet",
+    "scroll": "Faire défiler"
+  },
+  "mespensees": {
+    "title": "MesPensees",
+    "subtitle": "Votre journal intime, chiffré et 100 % local",
+    "pitch": "MesPensees est une application mobile de journal intime pensée pour la confidentialité absolue : aucun cloud, aucun backend, aucun compte. Tout reste sur votre appareil.",
+    "highlightsTitle": "Pourquoi MesPensees ?",
+    "featuresTitle": "Fonctionnalités clés",
+    "stackTitle": "Stack technique",
+    "screenshotsTitle": "Parcours de l'app",
+    "githubCta": "Voir sur GitHub",
+    "downloadCta": "Télécharger l'APK",
+    "privacyCta": "Lire la politique de confidentialité",
+    "privacy": "Privacy-first · Zéro cloud"
+  },
+  "about": {
+    "title": "À propos de Crédo",
+    "subtitle": "Le créateur derrière MesPensees",
+    "body": "Je suis Crédo, étudiant en Licence 1 IRT / IA et Big Data à ESGIS-TOGO, basé à Lomé. Je m'intéresse au développement logiciel, à la data/IA, à l'UI/UX et aux applications utiles. Mon défi personnel « Un Projet par Jour » me pousse à apprendre en construisant.",
+    "extra": "En dehors du code, j'aime le basketball et la photographie, deux passions qui nourrissent mon sens du rythme, de l'observation et du détail.",
+    "portfolio": "Voir mon portfolio externe",
+    "linkedin": "LinkedIn",
+    "github": "GitHub"
+  },
+  "support": {
+    "title": "Soutenir MesPensees",
+    "subtitle": "Un encouragement aide à continuer le développement.",
+    "body": "Le paiement n'est pas automatisé sur ce site. Pour soutenir le projet, envoyez le montant de votre choix via Moov Money au numéro ci-dessous, puis ajoutez si besoin la mention « Soutien MesPensees ».",
+    "numberLabel": "Numéro Moov Money",
+    "copy": "Copier le numéro",
+    "copied": "Numéro copié",
+    "qr": "QR Moov Money à ajouter",
+    "close": "Fermer"
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Une question, une suggestion ou un retour sur MesPensees ?",
+    "email": "Email",
+    "phone": "Téléphone",
+    "location": "Localisation",
+    "social": "Réseaux sociaux"
+  },
+  "footer": {
+    "rights": "Tous droits réservés.",
+    "madeWith": "Conçu avec soin",
+    "privacy": "Confidentialité",
+    "legal": "Mentions légales"
+  }
+}

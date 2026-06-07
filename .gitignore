@@ -2,12 +2,19 @@
 
 # dependencies
 node_modules/
+website/node_modules/
 
 # Legacy Expo (supprimable)
 .expo/
 dist/
 web-build/
 expo-env.d.ts
+
+# Next.js / site vitrine
+.next/
+website/.next/
+website/out/
+website/build/
 
 # Native
 .kotlin/
@@ -17,6 +24,9 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+android/app/debug.keystore
+android/local.properties
+local.properties
 
 # Metro
 .metro-health-check*
@@ -31,7 +41,11 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.*
 .env*.local
+.vercel/
+website/.vercel/
 
 # typescript
 *.tsbuildinfo
@@ -45,6 +59,23 @@ android/app/.cxx/
 ios/build/
 ios/Pods/
 
-# Logs et artefacts locaux
+# IDE / fichiers locaux
+.idea/
+android/.idea/
+.vscode/
+*.iml
+
+# Logs, caches et artefacts locaux
 crash_log.txt
 .g/
+android-build*.log
+*.log
+coverage/
+*.apk
+*.aab
+
+# Instructions locales d'agents, non utiles au projet public
+CLAUDE.md
+AGENTS.md
+website/CLAUDE.md
+website/AGENTS.md

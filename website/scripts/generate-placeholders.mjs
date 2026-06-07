@@ -1,0 +1,31 @@
+import { writeFileSync, mkdirSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Les captures d'écran réelles vivent dans public/screenshots/*.png.
+// Ce script ne génère plus de placeholders d'écran : il sert uniquement
+// à (re)générer l'image Open Graph du site.
+mkdirSync(join(__dirname, "..", "public"), { recursive: true });
+
+writeFileSync(
+  join(__dirname, "..", "public", "og-image.svg"),
+  `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="og" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0a0b"/>
+      <stop offset="100%" stop-color="#161618"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#og)"/>
+  <circle cx="900" cy="200" r="120" fill="#ff4d8d" opacity="0.08"/>
+  <circle cx="1050" cy="400" r="80" fill="#3ecf8e" opacity="0.08"/>
+  <text x="80" y="280" fill="#e8e8ea" font-family="Georgia, serif" font-size="64" font-style="italic">Crédo Adjignon</text>
+  <text x="80" y="340" fill="#ff4d8d" font-family="system-ui" font-size="28">Portfolio &amp; MesPensees</text>
+  <text x="80" y="400" fill="#9a9a9e" font-family="system-ui" font-size="22">Journal intime chiffré · 100% local</text>
+</svg>`,
+  "utf8",
+);
+
+console.log("og-image.svg generated in public/");

@@ -15,7 +15,6 @@ import {
 import { replanAllSmart, cancelAllSmart } from '../utils/smartNotifications';
 import { refreshHomeWidget } from '../utils/widgetBridge';
 import {
-  isValidDateStr,
   safeDate,
   safeDateStr,
   safeTimeStr,
@@ -127,13 +126,7 @@ export function NotesProvider({ children }) {
   useEffect(() => {
     if (loading || isDecoy) return;
     try {
-      const validNotes = notes.filter((n) => n && isValidDateStr(n.date));
-      const sorted = [...validNotes].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-      );
-      const latestTitle = sorted[0]?.titre;
       refreshHomeWidget({
-        title: latestTitle || "Écrire aujourd'hui",
         streak,
       });
     } catch (e) {

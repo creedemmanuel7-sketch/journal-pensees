@@ -26,6 +26,29 @@ Identifiant d'application : `com.mespensees.app`
 
 ---
 
+## Site vitrine (`website/`)
+
+Le site Next.js officiel est intégré dans ce monorepo sous `website/`. Il fait
+partie du code à publier : pages, composants, traductions, images publiques et
+configuration Next/Vercel.
+
+```bash
+cd website
+npm install
+npm run dev
+npm run build
+npm run lint
+```
+
+Pour Vercel, configurer le projet avec `Root Directory = website`, framework
+**Next.js**, build command `npm run build`, install command `npm install` et
+output directory par défaut.
+
+Les dossiers générés (`website/.next/`, `website/out/`, caches, logs) restent
+locaux et ne doivent pas être versionnés.
+
+---
+
 ## Fonctionnalités
 
 ### Écriture
@@ -66,6 +89,26 @@ Identifiant d'application : `com.mespensees.app`
 ### Widgets
 - **Widgets Android natifs** (Kotlin) pour l'écran d'accueil — voir `WIDGET.md`.
 - iOS : non livré (nécessite une Widget Extension et un Mac).
+
+### Widgets Android et confidentialité
+
+Le code source des widgets Android doit bien être versionné : il s'agit d'une
+fonctionnalité native de l'application (`android/app/src/main/java/.../widget/`,
+layouts XML et déclarations Manifest), pas d'un artefact personnel ou généré.
+
+Les widgets actuels sont :
+
+- **Inspiration du jour** : affiche une invitation d'écriture générique codée en
+  dur côté natif.
+- **Série d'écriture** : affiche uniquement le nombre de jours consécutifs
+  d'écriture (`streak`).
+- **Raccourcis** : ouvre des écrans de l'app via deep links, sans afficher de
+  donnée.
+
+Règle de confidentialité : un widget ne doit jamais afficher ni stocker de titre,
+de contenu de note, de capsule, de donnée de coffre ou de donnée utilisateur
+sensible. L'ancien risque de fuite de titre a été corrigé : le pont natif ne
+persiste que la série d'écriture et ignore tout titre/contenu éventuel.
 
 > ℹ️ Les fonctionnalités ci-dessus reflètent l'état réel du code. Sur iOS, seul
 > le squelette du projet existe : certaines briques natives doivent encore être
@@ -152,7 +195,7 @@ Le chiffrement, le hachage du PIN et la dérivation de clé sont implémentés d
 ## Installation
 
 ```bash
-cd c:\Users\credo\Desktop\MesPensees
+cd MesPensees
 npm install
 ```
 
@@ -176,6 +219,14 @@ npm run android
 ```
 
 > Sur macOS, pour iOS : `npm run ios` (voir [Notes iOS](#notes-ios)).
+
+Commandes utiles :
+
+```bash
+npm test
+npm run lint
+npm run android
+```
 
 ---
 
@@ -214,6 +265,10 @@ Pour un build debug (nécessite Metro lancé sur le PC) :
 ```bash
 npm run android:apk:dev
 ```
+
+Les APK/AAB générés (`*.apk`, `*.aab`) sont des artefacts de distribution. Ils ne
+doivent pas être commités par défaut ; publier un binaire doit être une décision
+explicite (par exemple via une release ou un espace de téléchargement séparé).
 
 ---
 
@@ -263,6 +318,22 @@ Quelques précisions honnêtes sur le modèle de sécurité :
 > Le niveau de protection dépend aussi de la robustesse du PIN choisi et de la
 > sécurité globale de l'appareil. Aucune solution logicielle ne remplace un
 > appareil verrouillé et à jour.
+
+---
+
+## Ce qui n'est pas versionné
+
+Ces fichiers restent locaux et ne doivent pas être poussés :
+
+- Keystores, clés de signature, certificats, secrets et fichiers `.env*`.
+- `android/app/debug.keystore`, `android/local.properties`, chemins SDK locaux.
+- Logs (`android-build*.log`, `*.log`), crash dumps et caches.
+- Artefacts générés : `android/app/build/`, `android/build/`, `.gradle/`,
+  `.next/`, `website/.next/`, `coverage/`, APK/AAB.
+- Fichiers IDE/personnels : `.idea/`, `android/.idea/`, `.vscode/`, `*.iml`.
+- Données utilisateur, exports personnels, captures privées ou contenu de notes.
+- Instructions locales d'agents (`CLAUDE.md`, `AGENTS.md`) si elles ne documentent
+  pas le projet public.
 
 ---
 

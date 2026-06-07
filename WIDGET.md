@@ -13,6 +13,16 @@ avec l'app (fond `#2A231C`, texte `#F5F0E8`).
 
 Fichiers : `android/app/src/main/java/com/mespensees/app/widget/`
 
+## Décision de versionnement
+
+Les widgets Android doivent être dans Git, car ce sont des sources de
+fonctionnalité : providers Kotlin, layouts XML, chaînes, drawables et
+déclarations `AndroidManifest.xml` / `res/xml/*_widget_info.xml`.
+
+À ne pas versionner avec eux : APK générés, builds Gradle, logs, keystores,
+captures privées et toute donnée utilisateur. Le widget peut exposer uniquement
+des données explicitement non sensibles.
+
 ### 1. Inspiration du jour — `MesPenseesWidgetProvider`
 
 - Layout : `res/layout/widget_mes_pensees.xml`
@@ -64,6 +74,15 @@ Appelé depuis `NotesContext` après chargement / modification des notes (seul l
 - Invitation d'écriture du jour (texte générique codé en dur, non lié aux notes)
 - Série d'écriture (`streak`) — entier non sensible
 - **Aucun** titre ni contenu de note dans `SharedPreferences`
+
+## Checklist confidentialité avant push
+
+- Aucun appel widget ne doit transmettre de titre ou contenu de note au module
+  natif.
+- `WidgetBridgeModule.kt` doit continuer à écrire uniquement `KEY_STREAK`.
+- Les textes affichés par `MesPenseesWidgetProvider` doivent rester génériques et
+  codés en dur.
+- Les raccourcis doivent ouvrir l'app via deep links sans afficher de données.
 
 ## Rebuild nécessaire
 
