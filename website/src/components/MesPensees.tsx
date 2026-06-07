@@ -48,80 +48,80 @@ export function MesPensees() {
           ))}
         </div>
 
-        <div className="mt-16 grid gap-12 lg:grid-cols-2 lg:gap-16">
-          <div>
-            <h3 className="mb-6 text-sm font-medium uppercase tracking-widest text-text3">
-              {section.featuresTitle}
-            </h3>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {mespenseesData.features.map((feature, i) => (
-                <motion.div
-                  key={feature.id}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.06 }}
-                  className="rounded-xl border border-border bg-bg2/60 p-5 transition-colors hover:border-rose/20"
-                >
-                  <span className="text-xl" aria-hidden>
-                    {feature.icon}
-                  </span>
-                  <h4 className="mt-3 font-medium text-text">
-                    {feature.title[locale]}
-                  </h4>
-                  <p className="mt-2 text-sm leading-relaxed text-text2">
-                    {feature.description[locale]}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-
-            <h3 className="mb-4 mt-12 text-sm font-medium uppercase tracking-widest text-text3">
-              {section.stackTitle}
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {mespenseesData.stack.map((item) => (
-                <span
-                  key={item.name}
-                  className="rounded-full border border-border bg-bg3 px-4 py-2 text-sm text-text2"
-                  title={item.category[locale]}
-                >
-                  {item.name}
+        <div className="mt-16">
+          <h3 className="mb-6 text-sm font-medium uppercase tracking-widest text-text3">
+            {section.featuresTitle}
+          </h3>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {mespenseesData.features.map((feature, i) => (
+              <motion.div
+                key={feature.id}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+                className="rounded-xl border border-border bg-bg2/60 p-5 transition-colors hover:border-rose/20"
+              >
+                <span className="text-xl" aria-hidden>
+                  {feature.icon}
                 </span>
-              ))}
-            </div>
+                <h4 className="mt-3 font-medium text-text">
+                  {feature.title[locale]}
+                </h4>
+                <p className="mt-2 text-sm leading-relaxed text-text2">
+                  {feature.description[locale]}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <a
-                href={siteConfig.apkPath}
-                download
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-rose px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-dark sm:w-auto"
+        <div className="mt-12 rounded-3xl border border-border bg-bg2/40 p-5 sm:p-6">
+          <h3 className="mb-4 text-sm font-medium uppercase tracking-widest text-text3">
+            {section.stackTitle}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {mespenseesData.stack.map((item) => (
+              <span
+                key={item.name}
+                className="rounded-full border border-border bg-bg3 px-4 py-2 text-sm text-text2"
+                title={item.category[locale]}
               >
-                {section.downloadCta}
-              </a>
-              <a
-                href="/privacy"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-teal/30 bg-teal/10 px-6 py-3 text-sm font-medium text-teal transition-colors hover:bg-teal/20 sm:w-auto"
-              >
-                {section.privacyCta}
-              </a>
-              <a
-                href={siteConfig.mespenseesGithub}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-medium text-text2 transition-colors hover:border-rose/30 hover:text-text sm:w-auto"
-              >
-                {section.githubCta} →
-              </a>
-            </div>
+                {item.name}
+              </span>
+            ))}
           </div>
 
-          <div id="screenshots">
-            <h3 className="mb-6 text-sm font-medium uppercase tracking-widest text-text3">
-              {section.screenshotsTitle}
-            </h3>
-            <ScreenshotCarousel />
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <a
+              href={siteConfig.apkPath}
+              download
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-rose px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-dark sm:w-auto"
+            >
+              {section.downloadCta}
+            </a>
+            <a
+              href="/privacy"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-teal/30 bg-teal/10 px-6 py-3 text-sm font-medium text-teal transition-colors hover:bg-teal/20 sm:w-auto"
+            >
+              {section.privacyCta}
+            </a>
+            <a
+              href={siteConfig.mespenseesGithub}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-medium text-text2 transition-colors hover:border-rose/30 hover:text-text sm:w-auto"
+            >
+              {section.githubCta} →
+            </a>
           </div>
+        </div>
+
+        <div id="screenshots" className="mt-20">
+          <h3 className="mb-8 text-sm font-medium uppercase tracking-widest text-text3">
+            {section.screenshotsTitle}
+          </h3>
+          <ScreenshotCarousel />
         </div>
       </div>
     </AnimatedSection>
