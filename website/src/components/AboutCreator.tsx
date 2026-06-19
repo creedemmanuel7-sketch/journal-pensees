@@ -20,7 +20,7 @@ export function AboutCreator() {
       id="about"
       className="relative border-t border-white/5 py-20 md:py-32"
     >
-      <div className="mx-auto max-w-6xl px-5 md:px-8">
+      <div className="mx-auto w-full max-w-7xl px-5 md:px-8 lg:px-10">
         <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <motion.div
             initial={{ opacity: 0, x: -24 }}

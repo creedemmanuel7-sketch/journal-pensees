@@ -21,7 +21,7 @@ export function Contact() {
       id="contact"
       className="relative border-t border-white/5 py-20 md:py-32"
     >
-      <div className="mx-auto max-w-6xl px-5 md:px-8">
+      <div className="mx-auto w-full max-w-7xl px-5 md:px-8 lg:px-10">
         <h2 className="font-display text-4xl italic leading-tight text-text md:text-5xl">
           {section.title}
         </h2>

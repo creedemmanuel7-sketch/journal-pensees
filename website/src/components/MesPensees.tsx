@@ -16,7 +16,7 @@ export function MesPensees() {
       id="mespensees"
       className="relative border-t border-white/5 py-20 md:py-32"
     >
-      <div className="mx-auto max-w-6xl px-5 md:px-8">
+      <div className="mx-auto w-full max-w-7xl px-5 md:px-8 lg:px-10">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-teal/20 bg-teal/5 px-4 py-1.5 text-xs text-teal">
           <span className="h-1.5 w-1.5 rounded-full bg-teal" />
           {section.privacy}
@@ -117,8 +117,8 @@ export function MesPensees() {
           </div>
         </div>
 
-        <div id="screenshots" className="mt-20">
-          <h3 className="mb-8 text-sm font-medium uppercase tracking-widest text-text3">
+        <div id="screenshots" className="mt-20 w-full max-w-full overflow-hidden">
+          <h3 className="mb-10 text-sm font-medium uppercase tracking-widest text-text3">
             {section.screenshotsTitle}
           </h3>
           <ScreenshotCarousel />

@@ -10,7 +10,7 @@ import type { PointerEvent } from "react";
 export function ScreenshotCarousel() {
   const { locale } = useLanguage();
   const screenshots = mespenseesData.screenshots;
-  const stepLabel = locale === "fr" ? "Etape" : "Step";
+  const stepLabel = locale === "fr" ? "Étape" : "Step";
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
@@ -23,69 +23,90 @@ export function ScreenshotCarousel() {
 
   return (
     <div
-      className="relative mx-auto max-w-5xl space-y-10 overflow-hidden md:space-y-12"
+      className="relative w-full max-w-full space-y-16 md:space-y-20 lg:space-y-24"
       onPointerMove={handlePointerMove}
       onPointerLeave={() => setPointer({ x: 0, y: 0 })}
     >
-      <div className="absolute left-1/2 top-12 hidden h-[calc(100%-6rem)] w-px -translate-x-1/2 bg-gradient-to-b from-rose/40 via-border to-teal/40 md:block" />
-
       {screenshots.map((shot, index) => {
         const left = index % 2 === 0;
-        const x = pointer.x * (left ? 10 : -10);
-        const y = pointer.y * 8;
+        const parallaxX = pointer.x * (left ? 14 : -14);
+        const parallaxY = pointer.y * 10;
 
         return (
           <motion.article
             key={shot.id}
-            initial={{ opacity: 0, y: 46, scale: 0.96 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="relative grid items-center gap-5 md:grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)] md:gap-6"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className={`relative flex w-full max-w-full flex-col items-stretch gap-6 md:gap-10 lg:gap-14 ${
+              left ? "md:flex-row md:items-center" : "md:flex-row-reverse md:items-center"
+            }`}
           >
-            <motion.div
-              style={{ x, y, rotate: left ? pointer.x * 2 : pointer.x * -2 }}
-              className={`relative z-10 mx-auto overflow-hidden rounded-[1.75rem] border border-border bg-bg3 shadow-2xl shadow-black/40 sm:rounded-[2rem] md:mx-0 ${
+            {/* Connecteur horizontal desktop */}
+            <div
+              aria-hidden
+              className={`pointer-events-none absolute top-1/2 hidden h-px w-[calc(50%-11rem)] bg-gradient-to-r md:block lg:w-[calc(50%-13rem)] ${
                 left
-                  ? "md:col-start-1 md:justify-self-end"
-                  : "md:col-start-3 md:justify-self-start"
+                  ? "left-[calc(50%+11rem)] from-rose/50 to-teal/30 lg:left-[calc(50%+13rem)]"
+                  : "right-[calc(50%+11rem)] from-teal/30 to-rose/50 lg:right-[calc(50%+13rem)]"
               }`}
+            />
+
+            {/* Capture */}
+            <motion.div
+              style={{
+                x: parallaxX,
+                y: parallaxY,
+                rotate: left ? pointer.x * 2.5 : pointer.x * -2.5,
+              }}
+              className="relative z-10 mx-auto w-full shrink-0 md:mx-0 md:w-[46%] lg:w-[44%]"
             >
-              <div className="relative aspect-[486/1024] w-[min(82vw,300px)] sm:w-[320px] lg:w-[340px]">
-                <img
-                  src={shot.image}
-                  alt={shot.label[locale]}
-                  width={486}
-                  height={1024}
-                  loading={index < 2 ? "eager" : "lazy"}
-                  decoding="async"
-                  className="h-full w-full object-cover"
-                />
+              <div className="mx-auto overflow-hidden rounded-[1.75rem] border border-border bg-bg3 shadow-2xl shadow-black/50 sm:rounded-[2rem] md:max-w-none">
+                <div className="relative mx-auto aspect-[486/1024] w-full max-w-[min(100%,320px)] sm:max-w-[340px] md:max-w-none md:w-full lg:max-w-[400px]">
+                  <img
+                    src={shot.image}
+                    alt={shot.label[locale]}
+                    width={486}
+                    height={1024}
+                    loading={index < 2 ? "eager" : "lazy"}
+                    decoding="async"
+                    className="h-full w-full object-cover object-top"
+                  />
+                </div>
+              </div>
+              <div className="mt-4 flex justify-center md:hidden">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-rose/30 bg-bg2 text-sm font-medium text-rose">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
               </div>
             </motion.div>
 
-            <div className="relative z-20 hidden h-12 w-12 items-center justify-center justify-self-center rounded-full border border-rose/30 bg-bg2 text-sm font-medium text-rose shadow-lg shadow-black/30 md:col-start-2 md:row-start-1 md:flex">
+            {/* Numéro central desktop */}
+            <div
+              aria-hidden
+              className="absolute left-1/2 top-1/2 z-20 hidden h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-rose/30 bg-bg2 text-sm font-medium text-rose shadow-lg shadow-black/40 md:flex"
+            >
               {String(index + 1).padStart(2, "0")}
             </div>
 
+            {/* Texte */}
             <motion.div
-              initial={{ opacity: 0, x: left ? 24 : -24 }}
+              initial={{ opacity: 0, x: left ? 20 : -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.15 }}
-              className={`rounded-2xl border border-border bg-bg2/75 p-5 text-left shadow-xl shadow-black/20 backdrop-blur sm:p-6 ${
-                left
-                  ? "md:col-start-3 md:row-start-1 md:text-left"
-                  : "md:col-start-1 md:row-start-1 md:text-right"
+              transition={{ delay: 0.12 }}
+              className={`min-w-0 flex-1 rounded-2xl border border-border bg-bg2/75 p-5 shadow-xl shadow-black/20 backdrop-blur sm:p-7 ${
+                left ? "md:text-left" : "md:text-right"
               }`}
             >
               <p className="text-xs uppercase tracking-[0.22em] text-text3">
                 {stepLabel} {String(index + 1).padStart(2, "0")}
               </p>
-              <h4 className="mt-2 text-xl font-medium text-text">
+              <h4 className="mt-2 text-xl font-medium text-text sm:text-2xl">
                 {shot.label[locale]}
               </h4>
-              <p className="mt-3 text-sm leading-relaxed text-text2">
+              <p className="mt-3 text-sm leading-relaxed text-text2 sm:text-base">
                 {shot.description[locale]}
               </p>
             </motion.div>

@@ -47,7 +47,7 @@ export function Header() {
           : "bg-transparent"
       }`}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4 md:px-8">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-5 py-4 md:px-8 lg:px-10">
         <a
           href="#hero"
           className="shrink-0 font-display text-lg italic text-text transition-colors hover:text-rose"
@@ -134,7 +134,7 @@ export function Header() {
         transition={{ duration: 0.2 }}
         className="overflow-hidden border-t border-white/5 bg-bg/95 backdrop-blur-xl md:hidden"
       >
-        <div className="mx-auto flex max-w-6xl flex-col gap-1 px-5 py-3">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-1 px-5 py-3 md:px-8 lg:px-10">
           {navItems.map((item) => (
             <a
               key={item.id}

@@ -27,7 +27,7 @@ export function Hero() {
         <div className="absolute -right-32 bottom-20 h-80 w-80 rounded-full bg-teal/5 blur-3xl" />
       </div>
 
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-12 sm:py-16 md:grid-cols-2 md:items-center md:gap-12 md:px-8">
+      <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 py-12 sm:py-16 md:grid-cols-2 md:items-center md:gap-12 md:px-8 lg:px-10">
         <div className="relative z-10">
           <motion.p
             initial={{ opacity: 0, y: 16 }}
