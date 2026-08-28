@@ -14,5 +14,6 @@ Guides internes pour concevoir la **v2**. Ils s’appuient sur des standards pub
 | [08-marketing-strategie.md](08-marketing-strategie.md) | Positionnement, canaux |
 | [09-branding-communication.md](09-branding-communication.md) | Voix, nom, LinkedIn |
 | [10-proposition-v2.md](10-proposition-v2.md) | Ce qu’on propose pour la v2 |
+| [11-keystore-release.md](11-keystore-release.md) | Signature Android Play Store + Data safety |
 
 Nouveautés publiques : `/changelog` + [CHANGELOG.md](../CHANGELOG.md).

@@ -4,9 +4,9 @@ Priorité : **fiabiliser le produit 1.0 et le rendre publiable**, pas empiler de
 
 ## P0 — Confiance et store
 
-1. CGU + Privacy **dans l’app** + URLs déjà sur le site.
-2. Keystore release + fiche Play Store (icône, feature graphic, Data safety).
-3. Retirer le discours « militaire » ; clarifier Nominatim.
+Livré en **1.0.1** (août 2026) : CGU + privacy in-app, URLs site `/privacy` `/terms`, copy chiffrement honnête, Nominatim, Gradle release si `keystore.properties` présent.
+
+Reste côté **compte Play** (pas du code) : keystore réel, icône 512, feature graphic 1024×500, questionnaire Data safety — voir [11-keystore-release.md](11-keystore-release.md).
 
 ## P1 — UX (Laws of UX + Material Motion)
 

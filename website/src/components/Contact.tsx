@@ -86,6 +86,9 @@ export function Contact() {
             <a href="/privacy" className="transition-colors hover:text-text2">
               {footer.privacy}
             </a>
+            <a href="/terms" className="transition-colors hover:text-text2">
+              {footer.terms}
+            </a>
             <a href="/legal" className="transition-colors hover:text-text2">
               {footer.legal}
             </a>

@@ -262,7 +262,7 @@ export default function CoffreScreen({ navigation }) {
             Le Coffre
           </Text>
           <Text style={[styles.coffreSub, { color: theme.text3 }]}>
-            CRYPTAGE MILITAIRE ACTIF
+            CHIFFREMENT LOCAL ACTIF
           </Text>
         </View>
 
@@ -546,6 +546,39 @@ export default function CoffreScreen({ navigation }) {
               )}
             </TouchableOpacity>
           ))}
+        </View>
+
+        <SectionLabel>INFORMATIONS LÉGALES</SectionLabel>
+        <View
+          style={[
+            styles.group,
+            { backgroundColor: theme.bg3, borderColor: theme.border },
+          ]}
+        >
+          <TouchableOpacity
+            style={[styles.settingRow, { borderBottomColor: theme.border }]}
+            onPress={() => navigation.navigate('Legal', { doc: 'privacy' })}
+          >
+            <Text style={styles.settingIcon}>🔏</Text>
+            <View style={styles.settingText}>
+              <Text style={[styles.settingName, { color: theme.text }]}>
+                Politique de confidentialité
+              </Text>
+            </View>
+            <Text style={[styles.chevron, { color: theme.text3 }]}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.settingRow, { borderBottomWidth: 0 }]}
+            onPress={() => navigation.navigate('Legal', { doc: 'terms' })}
+          >
+            <Text style={styles.settingIcon}>📃</Text>
+            <View style={styles.settingText}>
+              <Text style={[styles.settingName, { color: theme.text }]}>
+                Conditions d'utilisation
+              </Text>
+            </View>
+            <Text style={[styles.chevron, { color: theme.text3 }]}>›</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Zone critique */}

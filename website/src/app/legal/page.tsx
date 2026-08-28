@@ -20,7 +20,7 @@ export default function LegalPage() {
           MesPensees
         </p>
         <h1 className="mt-3 font-display text-4xl italic leading-tight sm:text-5xl">Mentions légales</h1>
-        <p className="mt-4 text-sm text-text3">Dernière mise à jour : juin 2026</p>
+        <p className="mt-4 text-sm text-text3">Dernière mise à jour : 28 août 2026</p>
 
         <section className="mt-10">
           <h2 className="text-2xl font-medium">Éditeur</h2>
@@ -55,9 +55,11 @@ export default function LegalPage() {
         <section className="mt-10">
           <h2 className="text-2xl font-medium">Hébergement</h2>
           <p className="mt-4 leading-relaxed text-text2">
-            Hébergeur : Vercel Inc. ou hébergeur à compléter après mise en ligne.
-            L’URL de production sera renseignée lorsque le déploiement final sera
-            validé.
+            Hébergeur : Vercel Inc. Site :{" "}
+            <a className="text-rose hover:text-rose-dark" href={siteConfig.url}>
+              {siteConfig.url}
+            </a>
+            .
           </p>
         </section>
 
@@ -88,6 +90,15 @@ export default function LegalPage() {
             Ce site n’ajoute pas d’analytics et ne collecte pas activement de
             données personnelles. Si un outil de mesure d’audience est ajouté plus
             tard, la politique de confidentialité sera mise à jour.
+          </p>
+          <p className="mt-4 leading-relaxed text-text2">
+            <Link href="/privacy" className="text-rose hover:text-rose-dark">
+              Politique de confidentialité
+            </Link>
+            {" · "}
+            <Link href="/terms" className="text-rose hover:text-rose-dark">
+              Conditions d’utilisation
+            </Link>
           </p>
         </section>
       </article>

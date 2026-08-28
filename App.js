@@ -28,6 +28,7 @@ import ShareNoteScreen from './screens/ShareNoteScreen';
 import CapsulesScreen from './screens/CapsulesScreen';
 import TrashScreen from './screens/TrashScreen';
 import RecoveryScreen from './screens/RecoveryScreen';
+import LegalScreen from './screens/LegalScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -110,6 +111,7 @@ function AppNavigator() {
           'Capsules',
           'Trash',
           'Recovery',
+          'Legal',
         ];
         if (protectedScreens.includes(currentRoute)) {
           navigationRef.current.reset({
@@ -222,6 +224,11 @@ function AppNavigator() {
             name="Recovery"
             component={RecoveryScreen}
             options={{ animation: 'slide_from_bottom', animationDuration: 400 }}
+          />
+          <Stack.Screen
+            name="Legal"
+            component={LegalScreen}
+            options={{ animation: 'slide_from_right', animationDuration: 380 }}
           />
         </Stack.Navigator>
       </NavigationContainer>

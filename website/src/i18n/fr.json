@@ -29,6 +29,7 @@
     "githubCta": "Voir sur GitHub",
     "downloadCta": "Télécharger l'APK",
     "privacyCta": "Lire la politique de confidentialité",
+    "termsCta": "Conditions d’utilisation",
     "privacy": "Privacy-first · Zéro cloud"
   },
   "about": {
@@ -62,6 +63,7 @@
     "rights": "Tous droits réservés.",
     "madeWith": "Conçu avec soin",
     "privacy": "Confidentialité",
+    "terms": "Conditions",
     "legal": "Mentions légales",
     "changelog": "Nouveautés"
   }

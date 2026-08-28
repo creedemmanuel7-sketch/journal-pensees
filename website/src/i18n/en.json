@@ -29,6 +29,7 @@
     "githubCta": "View on GitHub",
     "downloadCta": "Download APK",
     "privacyCta": "Read privacy policy",
+    "termsCta": "Terms of use",
     "privacy": "Privacy-first · Zero cloud"
   },
   "about": {
@@ -62,6 +63,7 @@
     "rights": "All rights reserved.",
     "madeWith": "Crafted with care",
     "privacy": "Privacy",
+    "terms": "Terms",
     "legal": "Legal notice",
     "changelog": "What’s new"
   }

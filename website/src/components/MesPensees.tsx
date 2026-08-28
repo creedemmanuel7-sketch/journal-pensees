@@ -108,6 +108,12 @@ export function MesPensees() {
               {section.privacyCta}
             </a>
             <a
+              href="/terms"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-medium text-text2 transition-colors hover:border-teal/30 hover:text-text sm:w-auto"
+            >
+              {section.termsCta}
+            </a>
+            <a
               href={siteConfig.mespenseesGithub}
               target="_blank"
               rel="noopener noreferrer"

@@ -25,7 +25,8 @@ website/build/
 *.key
 *.mobileprovision
 android/app/debug.keystore
-android/local.properties
+android/keystore.properties
+*.keystore
 local.properties
 
 # Metro

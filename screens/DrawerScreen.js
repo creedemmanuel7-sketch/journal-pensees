@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
+  ScrollView,
 } from 'react-native';
 import { useAppFonts, FONT_DISPLAY_ITALIC } from '../utils/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +24,8 @@ const MENU_ITEMS = [
   { icon: '🔔', label: 'Rappels', screen: 'Notifications' },
   { icon: '⏳', label: 'Capsules Temporelles', screen: 'Capsules' },
   { icon: '🗑️', label: 'Corbeille', screen: 'Trash' },
+  { icon: '🔏', label: 'Confidentialité', screen: 'Legal', params: { doc: 'privacy' } },
+  { icon: '📃', label: "Conditions d'utilisation", screen: 'Legal', params: { doc: 'terms' } },
 ];
 
 export default function DrawerScreen({ navigation }) {
@@ -65,7 +68,7 @@ export default function DrawerScreen({ navigation }) {
     ]).start(() => navigation.goBack());
   };
 
-  const handleNavigate = (screen) => {
+  const handleNavigate = (screen, params) => {
     Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: -width,
@@ -79,7 +82,7 @@ export default function DrawerScreen({ navigation }) {
       }),
     ]).start(() => {
       navigation.goBack();
-      setTimeout(() => navigation.navigate(screen), 50);
+      setTimeout(() => navigation.navigate(screen, params), 50);
     });
   };
 
@@ -175,13 +178,17 @@ export default function DrawerScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Menu items */}
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingBottom: 140 }}
+            showsVerticalScrollIndicator={false}
+          >
           <View style={styles.menuList}>
             {MENU_ITEMS.map((item, i) => (
               <TouchableOpacity
                 key={i}
                 style={[styles.menuItem, { borderBottomColor: theme.border }]}
-                onPress={() => handleNavigate(item.screen)}
+                onPress={() => handleNavigate(item.screen, item.params)}
               >
                 <Text style={styles.menuItemIcon}>{item.icon}</Text>
                 <Text style={[styles.menuItemLabel, { color: theme.text }]}>
@@ -193,6 +200,7 @@ export default function DrawerScreen({ navigation }) {
               </TouchableOpacity>
             ))}
           </View>
+          </ScrollView>
 
           {/* Bouton verrouiller */}
           <View style={styles.drawerFooter}>

@@ -14,14 +14,30 @@ La page publique : [mespensees.vercel.app/changelog](https://mespensees.vercel.a
 
 ## [Unreleased] — 2.0.0
 
+Pas de rupture prévue. Voir P1/P2 dans `docs/10-proposition-v2.md`.
+
 ### Added
 
-- Conditions d’utilisation et politique de confidentialité dans l’app (prévu).
 - Kit de marque (wordmark, icône Play Store) (prévu).
 
 ### Changed
 
 - Parcours verrouillage → journal plus clair, motion plus court (prévu).
+
+## [1.0.1] — 2026-08-28
+
+Correctif store / confiance. Pas de changement de contrat utilisateur.
+
+### Added
+
+- Politique de confidentialité et conditions d’utilisation dans l’app (menu + Coffre).
+- Page publique `/terms` (URL Play Store).
+
+### Changed
+
+- Copy coffre : « chiffrement local » à la place d’un discours « militaire ».
+- Privacy : Nominatim (OpenStreetMap) si un lieu est associé à une note.
+- Build Android `versionCode` 2 / `versionName` 1.0.1 ; signature release via `android/keystore.properties` si présent.
 
 ## [1.0.0] — 2026-08-28
 
@@ -51,4 +67,5 @@ Première version publique Android (APK debug via GitHub Releases).
 - Rétrospective « il y a un an » factice.
 
 [Unreleased]: https://github.com/creedemmanuel7-sketch/journal-pensees/compare/v0.1.0...HEAD
+[1.0.1]: https://github.com/creedemmanuel7-sketch/journal-pensees/compare/v0.1.0...HEAD
 [1.0.0]: https://github.com/creedemmanuel7-sketch/journal-pensees/releases/tag/v0.1.0

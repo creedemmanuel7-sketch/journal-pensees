@@ -29,7 +29,7 @@ export default function PrivacyPage() {
         <h1 className="mt-3 font-display text-4xl italic leading-tight sm:text-5xl">
           Politique de confidentialité
         </h1>
-        <p className="mt-4 text-sm text-text3">Dernière mise à jour : juin 2026</p>
+        <p className="mt-4 text-sm text-text3">Dernière mise à jour : 28 août 2026</p>
 
         <section className="mt-10 space-y-5 leading-relaxed text-text2">
           <p>
@@ -53,6 +53,17 @@ export default function PrivacyPage() {
             préférences, rappels, capsules temporelles et paramètres de sécurité.
             Ces éléments ne sont pas envoyés à Crédo Adjignon ni à un serveur
             MesPensees.
+          </p>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="text-2xl font-medium text-text">Géolocalisation (Nominatim)</h2>
+          <p className="mt-4 leading-relaxed text-text2">
+            Si vous associez un lieu à une note, l’application peut interroger le
+            service public Nominatim (OpenStreetMap) pour afficher un nom de lieu.
+            Cela envoie un appel réseau (adresse IP et coordonnées) à ce service,
+            pas à un serveur MesPensees. Sans cette option, cette requête n’a pas
+            lieu.
           </p>
         </section>
 
@@ -95,6 +106,10 @@ export default function PrivacyPage() {
             <a className="text-rose hover:text-rose-dark" href={`mailto:${siteConfig.email}`}>
               {siteConfig.email}
             </a>
+            . Voir aussi les{" "}
+            <Link href="/terms" className="text-rose hover:text-rose-dark">
+              conditions d’utilisation
+            </Link>
             .
           </p>
         </section>
