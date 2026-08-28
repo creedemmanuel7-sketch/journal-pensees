@@ -13,5 +13,6 @@ export const siteConfig = {
   email: "creedemmanuel7@gmail.com",
   phone: "+22896569761",
   location: "Lomé, Togo",
-  apkPath: "/downloads/mespensees-debug.apk",
+  apkPath:
+    "https://github.com/creedemmanuel7-sketch/journal-pensees/releases/latest/download/mespensees-debug.apk",
 } as const;

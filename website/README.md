@@ -48,15 +48,20 @@ Ne pas pousser depuis un environnement automatisé sans remote confirmé et inst
 
 ## APK
 
-Le bouton du site pointe vers `public/downloads/mespensees-debug.apk`.
+Le fichier APK (~97 Mo) **ne doit plus vivre dans Git**. GitHub limite les fichiers recommandés à 50 Mo.
 
-Si un vrai APK est généré côté application mobile, le copier avec :
+Le bouton du site pointe vers **GitHub Releases** :
+
+`https://github.com/creedemmanuel7-sketch/journal-pensees/releases/latest/download/mespensees-debug.apk`
+
+### Publier une nouvelle version
 
 ```powershell
-Copy-Item "C:\Users\credo\Desktop\MesPensees\android\app\build\outputs\apk\debug\app-debug.apk" "C:\Users\credo\Desktop\MesPensees\website\public\downloads\mespensees-debug.apk" -Force
+cd C:\Users\credo\Desktop\MesPensees
+gh release create v0.1.0 "android/app/build/outputs/apk/debug/app-debug.apk#mespensees-debug.apk" --title "MesPensees 0.1.0" --notes "APK debug pour test. Pas une release Play Store."
 ```
 
-Le fichier actuellement présent est un APK debug réel destiné au téléchargement direct temporaire. Il ne remplace pas une release Play Store signée.
+C'est un APK **debug** pour test. Il ne remplace pas une release Play Store signée.
 
 ## Structure
 
@@ -85,7 +90,7 @@ public/
 | `src/data/mespensees.ts` | Pitch, features, stack MesPensees |
 | `src/i18n/fr.json` / `en.json` | Textes d'interface |
 | `public/screenshots/*.png` | Captures réelles affichées dans la séquence verticale |
-| `public/downloads/mespensees-debug.apk` | APK debug public temporaire |
+| GitHub Releases | APK public (hors Git) |
 | `public/og-image.svg` | Image de partage social |
 
 ## i18n

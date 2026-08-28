@@ -72,7 +72,6 @@ android-build*.log
 *.log
 coverage/
 *.apk
-!website/public/downloads/*.apk
 *.aab
 
 # Instructions locales d'agents, non utiles au projet public

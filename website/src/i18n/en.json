@@ -24,6 +24,7 @@
     "featuresTitle": "Key features",
     "stackTitle": "Tech stack",
     "screenshotsTitle": "App walkthrough",
+    "screenshotsIntro": "From unlock to vault: the real order of a session, not a shuffled screenshot gallery.",
     "githubCta": "View on GitHub",
     "downloadCta": "Download APK",
     "privacyCta": "Read privacy policy",
@@ -32,7 +33,7 @@
   "about": {
     "title": "About Crédo",
     "subtitle": "The creator behind MesPensees",
-    "body": "I am Crédo, a first-year IRT / AI and Big Data student at ESGIS-TOGO, based in Lomé. I care about software development, data/AI, UI/UX, and useful applications. My personal challenge, “One Project per Day”, pushes me to learn by building.",
+    "body": "I am Crédo, a first-year IRT / AI and Big Data student at ESGIS-TOGO, based in Lomé. I build useful, local, carefully crafted apps — MesPensees is the most complete one so far: a journal designed for privacy, daily writing, and a calm visual experience.",
     "extra": "Outside code, I enjoy basketball and photography, two interests that sharpen my sense of rhythm, observation, and detail.",
     "portfolio": "View my external portfolio",
     "linkedin": "LinkedIn",

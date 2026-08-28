@@ -24,6 +24,7 @@
     "featuresTitle": "Fonctionnalités clés",
     "stackTitle": "Stack technique",
     "screenshotsTitle": "Parcours de l'app",
+    "screenshotsIntro": "Du verrouillage jusqu'au coffre : l'ordre réel d'une session, pas une galerie d'écrans mélangés.",
     "githubCta": "Voir sur GitHub",
     "downloadCta": "Télécharger l'APK",
     "privacyCta": "Lire la politique de confidentialité",
@@ -32,7 +33,7 @@
   "about": {
     "title": "À propos de Crédo",
     "subtitle": "Le créateur derrière MesPensees",
-    "body": "Je suis Crédo, étudiant en Licence 1 IRT / IA et Big Data à ESGIS-TOGO, basé à Lomé. Je m'intéresse au développement logiciel, à la data/IA, à l'UI/UX et aux applications utiles. Mon défi personnel « Un Projet par Jour » me pousse à apprendre en construisant.",
+    "body": "Je suis Crédo, étudiant en Licence 1 IRT / IA et Big Data à ESGIS-TOGO, basé à Lomé. Je construis des applications utiles, locales et soignées — MesPensees en est le projet le plus abouti : un journal pensé pour la confidentialité, l'écriture quotidienne et une expérience visuelle calme.",
     "extra": "En dehors du code, j'aime le basketball et la photographie, deux passions qui nourrissent mon sens du rythme, de l'observation et du détail.",
     "portfolio": "Voir mon portfolio externe",
     "linkedin": "LinkedIn",

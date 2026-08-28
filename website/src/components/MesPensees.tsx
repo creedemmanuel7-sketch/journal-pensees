@@ -95,7 +95,8 @@ export function MesPensees() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <a
               href={siteConfig.apkPath}
-              download
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-rose px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-dark sm:w-auto"
             >
               {section.downloadCta}
@@ -118,9 +119,12 @@ export function MesPensees() {
         </div>
 
         <div id="screenshots" className="mt-20 w-full max-w-full overflow-hidden">
-          <h3 className="mb-10 text-sm font-medium uppercase tracking-widest text-text3">
+          <h3 className="mb-3 text-sm font-medium uppercase tracking-widest text-text3">
             {section.screenshotsTitle}
           </h3>
+          <p className="mb-10 max-w-2xl text-sm leading-relaxed text-text2">
+            {section.screenshotsIntro}
+          </p>
           <ScreenshotCarousel />
         </div>
       </div>

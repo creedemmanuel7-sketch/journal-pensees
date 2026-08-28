@@ -143,66 +143,66 @@ export const mespenseesData = {
   ] satisfies StackItem[],
   screenshots: [
     {
+      id: "lock",
+      image: "/screenshots/lock.png",
+      label: { fr: "Déverrouiller", en: "Unlock" },
+      description: {
+        fr: "L'app s'ouvre sur un écran de verrouillage. PIN ou biométrie, puis seulement vos notes apparaissent.",
+        en: "The app opens on a lock screen. PIN or biometrics first — then your notes appear.",
+      },
+    },
+    {
       id: "timeline",
       image: "/screenshots/timeline.png",
-      label: { fr: "Timeline privée", en: "Private timeline" },
+      label: { fr: "Lire le journal", en: "Open the journal" },
       description: {
-        fr: "Retrouvez vos pensées par date, humeur et moment de vie sans exposer le contenu hors de l'appareil.",
-        en: "Browse thoughts by date, mood, and life moment without exposing content off-device.",
+        fr: "Vous arrivez dans la timeline : dates, humeurs et souvenirs, le tout resté sur l'appareil.",
+        en: "You land in the timeline: dates, moods, and memories, all kept on-device.",
       },
     },
     {
       id: "editor",
       image: "/screenshots/editor.png",
-      label: { fr: "Éditeur intime", en: "Private editor" },
+      label: { fr: "Écrire une pensée", en: "Write a thought" },
       description: {
-        fr: "Écrivez vite, ajoutez des médias, dictez selon l'appareil et gardez une expérience calme.",
-        en: "Write quickly, attach media, dictate when supported, and keep a calm experience.",
-      },
-    },
-    {
-      id: "coffre",
-      image: "/screenshots/coffre.png",
-      label: { fr: "Coffre chiffré", en: "Encrypted vault" },
-      description: {
-        fr: "Les notes sensibles sont protégées localement, avec une logique de coffre pensée pour la discrétion.",
-        en: "Sensitive notes are protected locally with a vault flow designed for discretion.",
-      },
-    },
-    {
-      id: "stats",
-      image: "/screenshots/stats.png",
-      label: { fr: "Statistiques personnelles", en: "Personal stats" },
-      description: {
-        fr: "Suivez votre régularité, vos émotions et vos habitudes d'écriture sans suivi externe.",
-        en: "Track streaks, emotions, and writing habits without external tracking.",
-      },
-    },
-    {
-      id: "lock",
-      image: "/screenshots/lock.png",
-      label: { fr: "Verrouillage", en: "Lock screen" },
-      description: {
-        fr: "PIN et biométrie gardent l'accès sous contrôle, même sur un téléphone partagé.",
-        en: "PIN and biometrics keep access controlled, even on a shared phone.",
+        fr: "Un tap, et l'éditeur s'ouvre : texte, médias, dictée vocale, dans une interface calme.",
+        en: "One tap opens the editor: text, media, voice dictation, in a calm interface.",
       },
     },
     {
       id: "capsules",
       image: "/screenshots/capsules.png",
-      label: { fr: "Capsules temporelles", en: "Time capsules" },
+      label: { fr: "Sceller pour plus tard", en: "Seal for later" },
       description: {
-        fr: "Scellez une pensée pour la redécouvrir plus tard, comme un message à votre futur vous.",
-        en: "Seal a thought and rediscover it later, like a message to your future self.",
+        fr: "Une pensée peut devenir capsule temporelle : on la scelle aujourd'hui, on la rouvre demain.",
+        en: "A thought can become a time capsule: seal it today, open it later.",
       },
     },
     {
       id: "capsules-tuto",
       image: "/screenshots/capsules-tuto.png",
-      label: { fr: "Tutoriel capsules", en: "Capsules tutorial" },
+      label: { fr: "Se laisser guider", en: "Get guided" },
       description: {
-        fr: "L'écran d'aide accompagne la prise en main des capsules temporelles directement dans l'application.",
-        en: "The help screen guides users through time capsules directly in the app.",
+        fr: "Le tutoriel contextuel montre les gestes au bon moment, sans surcharge au premier lancement.",
+        en: "The contextual tutorial shows gestures at the right moment, without overload on first launch.",
+      },
+    },
+    {
+      id: "stats",
+      image: "/screenshots/stats.png",
+      label: { fr: "Voir son rythme", en: "See your rhythm" },
+      description: {
+        fr: "Les stats restent personnelles : série d'écriture, humeurs, habitudes — sans tracking externe.",
+        en: "Stats stay personal: writing streak, moods, habits — with no external tracking.",
+      },
+    },
+    {
+      id: "coffre",
+      image: "/screenshots/coffre.png",
+      label: { fr: "Protéger davantage", en: "Tighten security" },
+      description: {
+        fr: "Le coffre rassemble PIN, biométrie, mode leurre, exports et réinitialisation — tout en local.",
+        en: "The vault gathers PIN, biometrics, decoy mode, exports, and reset — all local.",
       },
     },
   ] satisfies ScreenshotItem[],

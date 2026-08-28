@@ -87,7 +87,8 @@ export function Hero() {
             </a>
             <a
               href={siteConfig.apkPath}
-              download
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex w-full items-center justify-center rounded-full border border-teal/40 bg-teal/10 px-6 py-3 text-sm font-medium text-teal transition-colors hover:bg-teal/20 sm:w-auto"
             >
               {hero.download}
