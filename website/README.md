@@ -40,7 +40,7 @@ Dans Vercel, configurer le projet ainsi :
 4. Install command : `npm install`.
 5. Build command : `npm run build`.
 6. Output directory : laisser vide / valeur par défaut Next.js (`.next`).
-7. Production domain : `https://journal-pensees.vercel.app/`.
+7. Production domain : `https://mespensees.vercel.app/`.
 
 Aucune variable d'environnement n'est requise.
 

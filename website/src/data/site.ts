@@ -5,7 +5,7 @@ export const siteConfig = {
   title: "MesPensees — Journal intime privé et local",
   description:
     "Site officiel de MesPensees, l'application Android de journal intime chiffré, locale et pensée pour la confidentialité.",
-  url: "https://journal-pensees.vercel.app",
+  url: "https://mespensees.vercel.app",
   portfolio: "https://creedemmanuel7-sketch.github.io/mon-portfolio/",
   linkedin: "https://www.linkedin.com/in/cr%C3%A9do-adjignon-1a15b4382/",
   github: "https://github.com/creedemmanuel7-sketch",
