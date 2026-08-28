@@ -7,7 +7,7 @@ export const siteConfig = {
     "Site officiel de MesPensees, l'application Android de journal intime chiffré, locale et pensée pour la confidentialité.",
   url: "https://mespensees.vercel.app",
   portfolio: "https://creedemmanuel7-sketch.github.io/mon-portfolio/",
-  linkedin: "https://www.linkedin.com/in/cr%C3%A9do-adjignon-1a15b4382/",
+  linkedin: "https://www.linkedin.com/in/credo-credson-adjignon/",
   github: "https://github.com/creedemmanuel7-sketch",
   mespenseesGithub: "https://github.com/creedemmanuel7-sketch/journal-pensees",
   email: "creedemmanuel7@gmail.com",

@@ -66,6 +66,12 @@ export function Header() {
               {nav[item.labelKey]}
             </a>
           ))}
+          <a
+            href="/changelog"
+            className="text-sm text-text2 transition-colors hover:text-text"
+          >
+            {nav.changelog}
+          </a>
         </nav>
 
         <div className="ml-auto flex items-center gap-1 sm:gap-2 md:ml-0">
@@ -145,6 +151,13 @@ export function Header() {
               {nav[item.labelKey]}
             </a>
           ))}
+          <a
+            href="/changelog"
+            onClick={() => setMenuOpen(false)}
+            className="rounded-2xl px-4 py-3 text-sm text-text2 transition-colors hover:bg-bg2 hover:text-text"
+          >
+            {nav.changelog}
+          </a>
         </div>
       </motion.nav>
     </motion.header>

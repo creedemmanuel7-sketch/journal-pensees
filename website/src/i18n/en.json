@@ -4,7 +4,8 @@
     "mespensees": "The app",
     "screenshots": "Screenshots",
     "about": "About",
-    "contact": "Contact"
+    "contact": "Contact",
+    "changelog": "What’s new"
   },
   "hero": {
     "greeting": "Android app",
@@ -61,6 +62,7 @@
     "rights": "All rights reserved.",
     "madeWith": "Crafted with care",
     "privacy": "Privacy",
-    "legal": "Legal notice"
+    "legal": "Legal notice",
+    "changelog": "What’s new"
   }
 }

@@ -4,7 +4,8 @@
     "mespensees": "L'app",
     "screenshots": "Captures",
     "about": "À propos",
-    "contact": "Contact"
+    "contact": "Contact",
+    "changelog": "Nouveautés"
   },
   "hero": {
     "greeting": "Application Android",
@@ -61,6 +62,7 @@
     "rights": "Tous droits réservés.",
     "madeWith": "Conçu avec soin",
     "privacy": "Confidentialité",
-    "legal": "Mentions légales"
+    "legal": "Mentions légales",
+    "changelog": "Nouveautés"
   }
 }

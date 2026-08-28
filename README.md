@@ -24,6 +24,10 @@ buildable) ; iOS existe à l'état de **squelette**.
 
 Identifiant d'application : `com.mespensees.app`
 
+Guides internes (ergonomie, qualité, sûreté, motion, architecture, marque) :
+[`docs/`](docs/README.md). Journal des versions : [`CHANGELOG.md`](CHANGELOG.md)
+et [mespensees.vercel.app/changelog](https://mespensees.vercel.app/changelog).
+
 ---
 
 ## Site vitrine (`website/`)

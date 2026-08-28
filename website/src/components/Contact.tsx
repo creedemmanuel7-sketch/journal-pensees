@@ -80,6 +80,9 @@ export function Contact() {
             © {new Date().getFullYear()} {siteConfig.creatorShortName}. {footer.rights}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
+            <a href="/changelog" className="transition-colors hover:text-text2">
+              {footer.changelog}
+            </a>
             <a href="/privacy" className="transition-colors hover:text-text2">
               {footer.privacy}
             </a>
